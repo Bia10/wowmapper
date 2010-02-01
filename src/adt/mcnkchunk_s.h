@@ -1,6 +1,7 @@
 #pragma once
 
 #include "mcvtchunk_s.h"
+#include "mcnrchunk_s.h"
 
 /*! @brief MCNK chunk */
 struct McnkChunk_s : Chunk_s {
@@ -10,7 +11,7 @@ struct McnkChunk_s : Chunk_s {
   uint32_t num_layers;
   uint32_t num_doodad_refs;
   McvtChunk_s* mcvt;        //!< heights
-  void* offset_normal;
+  McnrChunk_s* mcnr;        //!< normals
   void* offset_layer;
   void* offset_refs;
   void* offset_alpha;
@@ -51,9 +52,13 @@ struct McnkChunk_s : Chunk_s {
     /* intialize sub chunks: MCVT */
     int32_t mcvt_offset = reinterpret_cast<int32_t>(mcvt);
     mcvt = new McvtChunk_s(memAbsOffset + mcvt_offset, in_buf);
+    /* intialize sub chunks: MCNR */
+    int32_t mcnr_offset = reinterpret_cast<int32_t>(mcnr);
+    mcnr = new McnrChunk_s(memAbsOffset + mcnr_offset, in_buf);
   }
 
   ~McnkChunk_s() {
     SAFE_DELETE(mcvt);
+    SAFE_DELETE(mcnr);
   }
 };
