@@ -13,7 +13,6 @@ class Adt_c {
  private:
   bool Initialize();
 
-  MhdrChunk_s mhdr_chunk_;
-
   uint8_t *raw_data_;
+  MhdrChunk_s mhdr_chunk_;
 };

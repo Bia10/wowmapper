@@ -2,7 +2,7 @@
 #include <fstream>
 
 #include "mpqhandler_c.h"
-#include "adt_c.h"
+#include "adt/adt_c.h"
 
 int main(int argc, char **argv) {
 
