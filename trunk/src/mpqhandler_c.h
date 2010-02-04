@@ -34,14 +34,14 @@ class MpqHandler_c {
    * @param outMap Pointer to MpqIndexNameMap
    * @return Returns amount of entries which matched the filter.
    */
-  int32_t GetMpqFilesByFilter(const char *filter, MpqFileList *outList) const;
+  int32_t GetFileListByFilter(const char *filter, MpqFileList *outList) const;
   /*! @brief Reads a file from our opened MPQ and returns it via buffer.
    *
    * @param filename Full path name of the file
    * @param buffer If (*buffer) == NULL the function allocates memory for you
    * @return Returns number of bytes written to the buffer.
    */
-  int64_t GetFileByName(const char *filename, uint8_t **buffer) const;
+  int64_t LoadFileByName(const char *filename, uint8_t **buffer) const;
 
   const MpqFileList& mpq_file_list() const { return mpq_file_list_; }
   mpq_archive_s* mpq_arc() const { return mpq_arc_; }

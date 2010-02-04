@@ -76,7 +76,7 @@ int32_t MpqHandler_c::OpenFile(const char *filename) {
   return err;
 }
 
-int32_t MpqHandler_c::GetMpqFilesByFilter(const char *filter,
+int32_t MpqHandler_c::GetFileListByFilter(const char *filter,
                                           MpqFileList *outList) const {
   int32_t num_files = 0;
   /* insert into outList if we find our filter in the string */
@@ -92,7 +92,7 @@ int32_t MpqHandler_c::GetMpqFilesByFilter(const char *filter,
   return num_files;
 }
 
-int64_t MpqHandler_c::GetFileByName(const char *filename, uint8_t **buffer) const {
+int64_t MpqHandler_c::LoadFileByName(const char *filename, uint8_t **buffer) const {
   int64_t unpacked_size = 0;
   int64_t written_bytes = 0;
   uint32_t file_num = 0;
