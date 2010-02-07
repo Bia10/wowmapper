@@ -92,7 +92,8 @@ int32_t MpqHandler_c::GetFileListByFilter(const char *filter,
   return num_files;
 }
 
-int64_t MpqHandler_c::LoadFileByName(const char *filename, uint8_t **buffer) const {
+int64_t MpqHandler_c::LoadFileByName(const char *filename,
+                                     uint8_t **buffer) const {
   int64_t unpacked_size = 0;
   int64_t written_bytes = 0;
   uint32_t file_num = 0;

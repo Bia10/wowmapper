@@ -1,6 +1,5 @@
 #pragma once
 
-#include <limits.h>
 #include "../chunk_s.h"
 
 struct McnrChunk_s : Chunk_s {
@@ -10,10 +9,10 @@ struct McnrChunk_s : Chunk_s {
     float z() const { return _z / 127.0f; }
 
    private:
-    int8_t _x, _y, _z;
+    int8_t _x, _z, _y;
   };
 
-  Normal_s normal[145];
+  Normal_s normals[145];
 
   McnrChunk_s(int32_t memAbsOffset, void *in_buf) {
     int32_t buf_addr = reinterpret_cast<int32_t>(in_buf);
