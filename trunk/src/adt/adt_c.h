@@ -21,12 +21,12 @@ class Adt_c {
 
   const uint8_t* raw_data() const { return raw_data_; }
   const MhdrChunk_s& mhdr_chunk() const { return mhdr_chunk_; }
-  const vertex3f* map_patches() const { return map_patches_; }
-  const vertex3f* map_normals() const { return map_normals_; }
+  const glm::vec3* vertices() const { return vertices_; }
+  const glm::vec3* normals() const { return normals_; }
 
  private:
   uint8_t *raw_data_;
   MhdrChunk_s mhdr_chunk_;
-  vertex3f map_patches_[3*4*64*256];
-  vertex3f map_normals_[4*64*256];
+  glm::vec3 vertices_[3*4*64*256];
+  glm::vec3 normals_[3*4*64*256];
 };

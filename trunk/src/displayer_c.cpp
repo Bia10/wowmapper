@@ -1,12 +1,14 @@
 #include "displayer_c.h"
 #include <GL/freeglut.h>
 #include <iostream>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtx/type_ptr.hpp>
 
 DisplayCallbacks_t Displayer_c::display_callbacks_;
 Camera_c Displayer_c::camera_;
 glm::vec2 Displayer_c::mouse_pos_(0.0f, 0.0f);
-const vertex3f *Displayer_c::map_patches_ = NULL;
-const vertex3f *Displayer_c::map_normals_ = NULL;
+const glm::vec3 *Displayer_c::map_patches_ = NULL;
+const glm::vec3 *Displayer_c::map_normals_ = NULL;
 
 Displayer_c::Displayer_c(int32_t width, int32_t height, const char *title)
     : win_id_(0),
@@ -35,7 +37,7 @@ Displayer_c::Displayer_c(int32_t width, int32_t height, const char *title)
 
   GLfloat LightAmbient[]= { 0.5f, 0.5f, 0.5f, 1.0f };
   GLfloat LightDiffuse[]= { 1.0f, 1.0f, 1.0f, 1.0f };
-  GLfloat LightPosition[]= { 0, 200.0f, 0, 1.0f };
+  GLfloat LightPosition[]= { 0, 500.0f, 0, 1.0f };
   glLightfv(GL_LIGHT1, GL_AMBIENT, LightAmbient);
   glLightfv(GL_LIGHT1, GL_DIFFUSE, LightDiffuse);
   glLightfv(GL_LIGHT1, GL_POSITION, LightPosition);
@@ -50,7 +52,7 @@ Displayer_c::~Displayer_c() {
   glutDestroyWindow(win_id_);
 }
 
-void Displayer_c::Start(const vertex3f *mapPatches, const vertex3f *mapNormals) {
+void Displayer_c::Start(const glm::vec3 *mapPatches, const glm::vec3 *mapNormals) {
   map_patches_ = mapPatches;
   map_normals_ = mapNormals;
 
@@ -62,20 +64,19 @@ void Displayer_c::RenderLoop() {
   glLoadIdentity();
   gluPerspective(60, 4/3.0f, 1.0, 1000.0);
 
-  /* set camera position and rotation */
-  glm::vec3 &cam_pos = camera_.position();
-  glm::vec2 &cam_rot = camera_.rotation();
+  glm::vec3 curr_pos = camera_.position();
+  glm::vec3 look_at = curr_pos + camera_.direction();
+  gluLookAt(curr_pos.x, curr_pos.y, curr_pos.z,
+            look_at.x, look_at.y, look_at.z,
+            0.0f, 1.0f, 0.0f);
 
-  glTranslatef(cam_pos.x, cam_pos.y, cam_pos.z);
-  glRotatef(cam_rot.y, 1, 0, 0);
-  glRotatef(cam_rot.x, 0, 1, 0);
 
   glBegin(GL_TRIANGLES);
-    for(int i = 0; i < 64*4*256; i++) {
+    for(int i = 0; i < 3*4*64*256; i++) {
       glNormal3f(map_normals_[i].x, map_normals_[i].y, map_normals_[i].z);
-      glVertex3f(map_patches_[i*3].x, map_patches_[i*3].y, map_patches_[i*3].z);
-      glVertex3f(map_patches_[i*3+1].x, map_patches_[i*3+1].y, map_patches_[i*3+1].z);
-      glVertex3f(map_patches_[i*3+2].x, map_patches_[i*3+2].y, map_patches_[i*3+2].z);
+      glVertex3f(map_patches_[i].x, map_patches_[i].y, map_patches_[i].z);
+      //glVertex3f(map_patches_[i*3+1].x, map_patches_[i*3+1].y, map_patches_[i*3+1].z);
+      //glVertex3f(map_patches_[i*3+2].x, map_patches_[i*3+2].y, map_patches_[i*3+2].z);
     }
   glEnd();
 
@@ -90,34 +91,41 @@ void Displayer_c::MouseCallback(int32_t x, int32_t y) {
   glm::vec2 new_pos(static_cast<float>(x), static_cast<float>(y));
   glm::vec2 distance = new_pos - mouse_pos_;
   camera_.rotation() += (distance * 0.5f);
+
+  glm::mat4 rot4;
+  rot4 = glm::rotate(rot4, camera_.rotation().y, glm::vec3(1, 0, 0));
+  rot4 = glm::rotate(rot4, camera_.rotation().x, glm::vec3(0, 1, 0));
+  glm::mat3 rot(rot4);
+
+  camera_.direction() = (glm::vec3(0, 0, 1) * rot);
+
   mouse_pos_ = new_pos;
 }
 
 void Displayer_c::KeyboardCallback(uint8_t key, int x, int y) {
-  const float speed = 0.5f;
+  glm::vec3 &cam_dir = camera_.direction();
+  glm::vec3 &cam_pos = camera_.position();
+  const float speed = 5.0f;
 
   /* key control */
   switch(key) {
     case 'q': {
-      camera_.position().y -= speed;
-      break; }
-    case 'e': {
       camera_.position().y += speed;
       break; }
+    case 'e': {
+      camera_.position().y -= speed;
+      break; }
     case 'a': {
-      camera_.position().x += speed;
+      cam_pos -= glm::vec3(-cam_dir.z, 0, cam_dir.x) * speed;
       break; }
     case 'd': {
-      camera_.position().x -= speed;
+      cam_pos += glm::vec3(-cam_dir.z, 0, cam_dir.x) * speed;
       break; }
     case 'w': {
-      camera_.position().z += speed;
+      cam_pos += cam_dir * speed;
       break; }
     case 's': {
-      camera_.position().z -= speed;
-      break; }
-    case 'l': {
-      glEnable(GL_LIGHTING);
+      cam_pos -= cam_dir * speed;
       break; }
   }
 }
