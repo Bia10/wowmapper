@@ -15,10 +15,16 @@ typedef std::list<Adt_c*> AdtList_t;
 /*! @brief Used to read WDT files and retrieve ADTs. */
 class Wdt_c {
  public:
-  Wdt_c(uint8_t *buffer, const char *name);
+  Wdt_c(uint8_t **buffer, const char *name);
   virtual ~Wdt_c();
 
+  /*! @brief Loads all ADTs that are known through intialization of this WDT.
+   *
+   * @param mpq_handler MpqHandle_c reference needed to load ADTs from MPQ
+   * @param outAdtList Returns a list of ADTs
+   */
   void LoadAdts(MpqHandler_c &mpq_handler, AdtList_t *outAdtList) const;
+  void UnloadAdts(AdtList_t *adtList) const;
 
  private:
   void GenerateAdtNames();

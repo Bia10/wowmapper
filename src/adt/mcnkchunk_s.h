@@ -1,5 +1,6 @@
 #pragma once
 
+#include <glm/glm.hpp>
 #include "mcvtchunk_s.h"
 #include "mcnrchunk_s.h"
 
@@ -28,7 +29,7 @@ struct McnkChunk_s : Chunk_s {
   uint32_t num_snd_emitters;
   void* offset_liquid;
   uint32_t size_liquid;
-  float position[3];
+  glm::vec3 position;
   void* offset_mccv;
   uint32_t unused_pad1;
   uint32_t unused_pad2;
@@ -44,10 +45,10 @@ struct McnkChunk_s : Chunk_s {
 
   McnkChunk_s(int32_t memAbsOffset, void *in_buf) {
     int32_t buf_addr = reinterpret_cast<int32_t>(in_buf);
-    void *dest_addr = reinterpret_cast<void*>(buf_addr + memAbsOffset);
+    void *src_addr = reinterpret_cast<void*>(buf_addr + memAbsOffset);
 
-    /* fill MCVT chunk with its real content */
-    memcpy(this, dest_addr, sizeof(McnkChunk_s));
+    /* fill MCNK chunk with its real content */
+    memcpy(this, src_addr, sizeof(McnkChunk_s));
 
     /* intialize sub chunks: MCVT */
     int32_t mcvt_offset = reinterpret_cast<int32_t>(mcvt);
