@@ -8,8 +8,10 @@ class Camera_c {
 
   glm::vec3& position() { return position_; }
   glm::vec2& rotation() { return rotation_; }
+  glm::vec3& direction() { return direction_; }
 
  private:
   glm::vec3 position_;
   glm::vec2 rotation_;
+  glm::vec3 direction_;
 };

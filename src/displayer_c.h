@@ -11,7 +11,7 @@ class Displayer_c {
  public:
   Displayer_c(int32_t width, int32_t height, const char *title);
   ~Displayer_c();
-  void Start(const vertex3f *mapPatches, const vertex3f *mapNormals);
+  void Start(const glm::vec3 *mapPatches, const glm::vec3 *mapNormals);
 
   DisplayCallbacks_t& display_callbacks() { return display_callbacks_; }
 
@@ -23,9 +23,9 @@ class Displayer_c {
 
   static DisplayCallbacks_t display_callbacks_;
   static Camera_c camera_;
+  static const glm::vec3 *map_patches_;
+  static const glm::vec3 *map_normals_;
   static glm::vec2 mouse_pos_;
-  static const vertex3f *map_patches_;
-  static const vertex3f *map_normals_;
 
   int32_t win_id_;
   int32_t width_;

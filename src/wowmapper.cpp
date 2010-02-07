@@ -38,14 +38,14 @@ int main(int argc, char **argv) {
 
 	Displayer_c disp(480, 360, "WoW Mapper");
 
-	mpq_handler.LoadFileByName("World\\Maps\\Azeroth\\Azeroth_32_49.adt", &file_buf);
+	mpq_handler.LoadFileByName("World\\Maps\\Azeroth\\Azeroth_37_53.adt", &file_buf);
 
 	Adt_c adt(&file_buf);
 	adt.GenerateMesh();
 	glm::vec3 &pos = adt.mhdr_chunk().mcin->mcnk_index[0].mcnk->position;
 	std::cout << pos.x << " " << pos.y << " " << pos.z << std::endl;
 
-	disp.Start(adt.map_patches(), adt.map_normals());
+	disp.Start(adt.vertices(), adt.normals());
 
 	return 0;
 }
