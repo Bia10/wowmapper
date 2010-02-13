@@ -23,7 +23,7 @@ class Wdt_c {
    * @param mpq_handler MpqHandle_c reference needed to load ADTs from MPQ
    * @param outAdtList Returns a list of ADTs
    */
-  void LoadAdts(MpqHandler_c &mpq_handler, AdtList_t *outAdtList) const;
+  void LoadAdts(MpqHandler_c &mpq_handler, AdtList_t *outAdtList, int32_t count = -1, int32_t offset = 0) const;
   void UnloadAdts(AdtList_t *adtList) const;
 
  private:

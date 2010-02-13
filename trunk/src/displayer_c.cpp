@@ -7,8 +7,10 @@
 DisplayCallbacks_t Displayer_c::display_callbacks_;
 Camera_c Displayer_c::camera_;
 glm::vec2 Displayer_c::mouse_pos_(0.0f, 0.0f);
-const glm::vec3 *Displayer_c::map_patches_ = NULL;
-const glm::vec3 *Displayer_c::map_normals_ = NULL;
+const AdtList_t *Displayer_c::adt_list_= NULL;
+
+glm::vec3 *Displayer_c::vertices_ = NULL;
+glm::vec3 *Displayer_c::normales_ = NULL;
 
 Displayer_c::Displayer_c(int32_t width, int32_t height, const char *title)
     : win_id_(0),
@@ -19,7 +21,7 @@ Displayer_c::Displayer_c(int32_t width, int32_t height, const char *title)
   glutInitDisplayMode(GLUT_DEPTH | GLUT_RGB | GLUT_DOUBLE);
 
   glutInitWindowPosition(100, 100);
-  glutInitWindowSize(480, 360);
+  glutInitWindowSize(width, height);
 
   win_id_ = glutCreateWindow(title);
   glutDisplayFunc(Displayer_c::RenderLoop);
@@ -35,9 +37,9 @@ Displayer_c::Displayer_c(int32_t width, int32_t height, const char *title)
   glShadeModel(GL_SMOOTH);
   //glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);
 
-  GLfloat LightAmbient[]= { 0.5f, 0.5f, 0.5f, 1.0f };
-  GLfloat LightDiffuse[]= { 1.0f, 1.0f, 1.0f, 1.0f };
-  GLfloat LightPosition[]= { 0, 500.0f, 0, 1.0f };
+  GLfloat LightAmbient[]= { 0.4f, 0.4f, 0.2f, 1.0f };
+  GLfloat LightDiffuse[]= { 0.5f, 0.5f, 0.5f, 0.5f };
+  GLfloat LightPosition[]= { 0, 1500.0f, 0, 1.0f };
   glLightfv(GL_LIGHT1, GL_AMBIENT, LightAmbient);
   glLightfv(GL_LIGHT1, GL_DIFFUSE, LightDiffuse);
   glLightfv(GL_LIGHT1, GL_POSITION, LightPosition);
@@ -45,6 +47,7 @@ Displayer_c::Displayer_c(int32_t width, int32_t height, const char *title)
   glEnable(GL_LIGHTING);
   glEnable(GL_DEPTH_TEST);
   glDepthFunc(GL_LEQUAL);
+  glClearColor(0, 0, 0.1, 1.0f);
   //glEnable(GL_NORMALIZE);
 }
 
@@ -52,9 +55,21 @@ Displayer_c::~Displayer_c() {
   glutDestroyWindow(win_id_);
 }
 
-void Displayer_c::Start(const glm::vec3 *mapPatches, const glm::vec3 *mapNormals) {
-  map_patches_ = mapPatches;
-  map_normals_ = mapNormals;
+void Displayer_c::Start(AdtList_t *adtList) {
+  adt_list_ = adtList;
+
+  vertices_ = new glm::vec3[adtList->size() * 12 * 64 *256];
+  normales_ = new glm::vec3[adtList->size() * 12 * 64 *256];
+
+  int counter = 0;
+  for(AdtList_t::const_iterator adt = adt_list_->begin();
+          adt != adt_list_->end();
+          ++adt, counter++) {
+    for(int i = 0; i < 12*64*256; i++) {
+      vertices_[counter*12*64*256+i] = (*adt)->vertices()[i];
+      normales_[counter*12*64*256+i] = (*adt)->normals()[i];
+    }
+  }
 
   glutMainLoop();
 }
@@ -62,7 +77,7 @@ void Displayer_c::Start(const glm::vec3 *mapPatches, const glm::vec3 *mapNormals
 void Displayer_c::RenderLoop() {
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
   glLoadIdentity();
-  gluPerspective(60, 4/3.0f, 1.0, 1000.0);
+  gluPerspective(60, 4/3.0f, 1.0, 100000.0);
 
   glm::vec3 curr_pos = camera_.position();
   glm::vec3 look_at = curr_pos + camera_.direction();
@@ -70,15 +85,44 @@ void Displayer_c::RenderLoop() {
             look_at.x, look_at.y, look_at.z,
             0.0f, 1.0f, 0.0f);
 
-
-  glBegin(GL_TRIANGLES);
-    for(int i = 0; i < 3*4*64*256; i++) {
-      glNormal3f(map_normals_[i].x, map_normals_[i].y, map_normals_[i].z);
-      glVertex3f(map_patches_[i].x, map_patches_[i].y, map_patches_[i].z);
-      //glVertex3f(map_patches_[i*3+1].x, map_patches_[i*3+1].y, map_patches_[i*3+1].z);
-      //glVertex3f(map_patches_[i*3+2].x, map_patches_[i*3+2].y, map_patches_[i*3+2].z);
+  // std::cout << "############# " << p.x << " " << p.y << " " << p.z << std::endl;
+  /*glBegin(GL_TRIANGLES);
+    for(int i = 0; i < 8*12*64*256; i++) {
+      glNormal3f(normales_[i].x, normales_[i].y, normales_[i].z);
+      glVertex3f(vertices_[i].x - p.y, vertices_[i].y - p.z, vertices_[i].z - p.x);
     }
-  glEnd();
+    for(AdtList_t::const_iterator adt = adt_list_->begin();
+        adt != adt_list_->end();
+        ++adt) {
+      const glm::vec3 *vertices = (*adt)->vertices();
+      const glm::vec3 *normals = (*adt)->normals();
+      //std::cout << vertices[0].x - p.x << " " << vertices[0].y - p.y << " " << vertices[0].z - p.z << std::endl;
+
+      for(int i = 0; i < 12*64*256; i++) { //3*4
+        glNormal3f(normals[i].x, normals[i].y, normals[i].z);
+        glVertex3f(vertices[i].x - p.y, vertices[i].y - p.z, vertices[i].z - p.x);
+        glNormal3f(normals[i*12].x, normals[i*12].y, normals[i*12].z);
+        glVertex3f(vertices[i*12].x - p.y, vertices[i*12].y - p.z, vertices[i*12].z - p.x);
+        glNormal3f(normals[i*12+3].x, normals[i*12+3].y, normals[i*12+3].z);
+        glVertex3f(vertices[i*12+3].x - p.y, vertices[i*12+3].y - p.z, vertices[i*12+3].z - p.x);
+        glNormal3f(normals[i*12+6].x, normals[i*12+6].y, normals[i*12+6].z);
+        glVertex3f(vertices[i*12+6].x - p.y, vertices[i*12+6].y - p.z, vertices[i*12+6].z - p.x);
+        glNormal3f(normals[i*12+9].x, normals[i*12+9].y, normals[i*12+9].z);
+        glVertex3f(vertices[i*12+9].x - p.y, vertices[i*12+9].y - p.z, vertices[i*12+9].z - p.x);
+      }
+    }
+  glEnd();*/
+
+  glEnableClientState(GL_VERTEX_ARRAY);
+  glEnableClientState(GL_NORMAL_ARRAY);
+
+  glNormalPointer(GL_FLOAT, 0, normales_);
+  glVertexPointer(3, GL_FLOAT, 0, vertices_);
+  glDrawArrays(GL_TRIANGLES, 0, adt_list_->size() * 12 * 64 * 256);
+
+  glDisableClientState(GL_VERTEX_ARRAY);
+  glDisableClientState(GL_NORMAL_ARRAY);
+
 
   glutSwapBuffers();
 }
@@ -105,7 +149,7 @@ void Displayer_c::MouseCallback(int32_t x, int32_t y) {
 void Displayer_c::KeyboardCallback(uint8_t key, int x, int y) {
   glm::vec3 &cam_dir = camera_.direction();
   glm::vec3 &cam_pos = camera_.position();
-  const float speed = 5.0f;
+  const float speed = 20.0f;
 
   /* key control */
   switch(key) {

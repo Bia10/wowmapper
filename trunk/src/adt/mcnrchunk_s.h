@@ -41,13 +41,7 @@ struct McnrChunk_s : Chunk_s {
     return normals;
   }
 
-  McnrChunk_s(int32_t memAbsOffset, void *in_buf) {
-    int32_t buf_addr = reinterpret_cast<int32_t>(in_buf);
-    void *dest_addr = reinterpret_cast<void*>(buf_addr + memAbsOffset);
-
-    /* fill MCNR chunk with its real content */
-    memcpy(this, dest_addr, sizeof(McnrChunk_s));
-  }
+  McnrChunk_s(uint32_t offset, void *buffer) : Chunk_s(offset, buffer, true) { }
 
  private:
   struct Normal_s { int8_t _x, _z, _y; } normal[145]; //<! normal (x, Z, y)

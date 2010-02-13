@@ -13,18 +13,12 @@ struct McinChunk_s : Chunk_s {
 
   McnkIndex_s mcnk_index[256];
 
-  McinChunk_s(int32_t memAbsOffset, void *in_buf) {
-    int32_t buf_addr = reinterpret_cast<int32_t>(in_buf);
-    void *dest_addr = reinterpret_cast<void*>(buf_addr + memAbsOffset);
-
-    /* fill MCVT chunk with its real content */
-    memcpy(this, dest_addr, sizeof(McinChunk_s));
-
+  McinChunk_s(uint32_t offset, void *buffer) : Chunk_s(offset, buffer, true) {
     /* intialize sub chunks: MCNK */
-    int32_t mcnk_abs_offset;
+    int32_t mcnk_offset;
     for(int i = 0; i < 256; i++) {
-      mcnk_abs_offset = reinterpret_cast<int32_t>(mcnk_index[i].mcnk);
-      mcnk_index[i].mcnk = new McnkChunk_s(mcnk_abs_offset, in_buf);
+      mcnk_offset = reinterpret_cast<uint32_t>(mcnk_index[i].mcnk);
+      mcnk_index[i].mcnk = new McnkChunk_s(mcnk_offset, buffer);
     }
   }
 

@@ -3,7 +3,6 @@
 #include <sstream>
 #include "../adt/adt_c.h"
 
-
 #define MPHD_OFFSET 0xC
 #define MAIN_OFFSET 0x34
 
@@ -26,7 +25,7 @@ void Wdt_c::GenerateAdtNames() {
   /* go through all map tiles and retrieve adt positions and their names */
   for (int y = 0; y < 64; y++) {
     for (int x = 0; x < 64; x++) {
-      if(main_chunk_.map_tile[y][x].flags && (main_chunk_.map_tile[y][x].flags & 1)) {
+      if(main_chunk_.map_tile[y][x].flags & 1) {
         /* create adt filename and push it to the vector */
         tile_name << map_name_ << "_" << x << "_" << y << ".adt";
         adt_names_.push_back(tile_name.str());
@@ -37,10 +36,10 @@ void Wdt_c::GenerateAdtNames() {
     }
   }
 
-  std::cout << "Retrieved " << adt_names_.size() << " map tiles." << std::endl;
+  std::cout << "Retrieved " << adt_names_.size() << " adt names." << std::endl;
 }
 
-void Wdt_c::LoadAdts(MpqHandler_c &mpq_handler, AdtList_t *outAdtList) const {
+void Wdt_c::LoadAdts(MpqHandler_c &mpqHandler, AdtList_t *outAdtList, int32_t count, int32_t offset) const {
   outAdtList->clear();
   uint8_t *file_buf = NULL;
 
@@ -51,13 +50,17 @@ void Wdt_c::LoadAdts(MpqHandler_c &mpq_handler, AdtList_t *outAdtList) const {
   for(AdtNames_t::const_iterator name = adt_names_.begin();
       name != adt_names_.end();
       ++name) {
-    /* print adt names that are loaded */
-    std::cout << "Load ADT (" << counter << "/" << num_adts << "): ";
-    std::cout << *name << std::endl;
+    if(count != -1 && counter-1 >= offset+count) break;
+    if(counter-1 >= offset) {
 
-    /* load file from mpq and push adts to list */
-    mem_size += mpq_handler.LoadFileByName(name->c_str(), &file_buf);
-    outAdtList->push_back(new Adt_c(&file_buf));
+      /* print adt names that are loaded */
+      std::cout << "Load ADT (" << counter << "/" << num_adts << "): ";
+      std::cout << *name << std::endl;
+
+      /* load file from mpq and push adts to list */
+      mem_size += mpqHandler.LoadFileByName(name->c_str(), &file_buf);
+      outAdtList->push_back(new Adt_c(&file_buf, &mpqHandler));
+    }
 
     counter++;
   }
@@ -74,3 +77,4 @@ void Wdt_c::UnloadAdts(AdtList_t *adtList) const {
 
   adtList->clear();
 }
+

@@ -1,6 +1,8 @@
 #pragma once
 
 #include <glm/glm.hpp>
+#include <iostream>
+#include <exception>
 #include "mcvtchunk_s.h"
 #include "mcnrchunk_s.h"
 
@@ -43,19 +45,18 @@ struct McnkChunk_s : Chunk_s {
     FLAG_MCCV,
   };
 
-  McnkChunk_s(int32_t memAbsOffset, void *in_buf) {
-    int32_t buf_addr = reinterpret_cast<int32_t>(in_buf);
-    void *src_addr = reinterpret_cast<void*>(buf_addr + memAbsOffset);
-
-    /* fill MCNK chunk with its real content */
+  McnkChunk_s(uint32_t offset, void *buffer) : Chunk_s(offset, buffer, false) {
+    /* copy MCNK chunk manually to avoid memory corruption */
+    uint32_t buf_addr = reinterpret_cast<uint32_t>(buffer);
+    void *src_addr = reinterpret_cast<void*>(buf_addr + offset);
     memcpy(this, src_addr, sizeof(McnkChunk_s));
 
     /* intialize sub chunks: MCVT */
-    int32_t mcvt_offset = reinterpret_cast<int32_t>(mcvt);
-    mcvt = new McvtChunk_s(memAbsOffset + mcvt_offset, in_buf);
+    uint32_t mcvt_offset = reinterpret_cast<uint32_t>(mcvt);
+    mcvt = new McvtChunk_s(offset + mcvt_offset, buffer);
     /* intialize sub chunks: MCNR */
-    int32_t mcnr_offset = reinterpret_cast<int32_t>(mcnr);
-    mcnr = new McnrChunk_s(memAbsOffset + mcnr_offset, in_buf);
+    uint32_t mcnr_offset = reinterpret_cast<uint32_t>(mcnr);
+    mcnr = new McnrChunk_s(offset + mcnr_offset, buffer);
   }
 
   ~McnkChunk_s() {
