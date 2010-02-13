@@ -1,6 +1,7 @@
 #pragma once
 
 #include "mcinchunk_s.h"
+#include "mwmochunk_s.h"
 
 /*! @brief MHDR chunk */
 struct MhdrChunk_s : Chunk_s {
@@ -9,7 +10,7 @@ struct MhdrChunk_s : Chunk_s {
   uint32_t mtex;
   uint32_t mmdx;
   uint32_t mmid;
-  uint32_t mwmo;
+  MwmoChunk_s *mwmo;
   uint32_t mwid;
   uint32_t mddf;
   uint32_t modf;
@@ -21,19 +22,18 @@ struct MhdrChunk_s : Chunk_s {
   uint32_t pad[4];
 
  public:
-  MhdrChunk_s(int32_t memAbsOffset, void *in_buf) {
-    int32_t buf_addr = reinterpret_cast<int32_t>(in_buf);
-    void *dest_addr = reinterpret_cast<void*>(buf_addr + memAbsOffset);
-
-    /* fill MHDR chunk with its real content */
-    memcpy(this, dest_addr, sizeof(MhdrChunk_s));
-
+  MhdrChunk_s(uint32_t offset, void *buffer) : Chunk_s(offset, buffer, true) {
     /* intialize sub chunks: MCIN */
-    int32_t mcin_offset = reinterpret_cast<int32_t>(mcin);
-    mcin = new McinChunk_s(mcin_offset + 0x14, in_buf);
+    uint32_t mcin_offset = reinterpret_cast<uint32_t>(mcin);
+    mcin = new McinChunk_s(mcin_offset + 0x14, buffer);
+
+    /* intialize sub chunks: MWMO */
+    uint32_t mwmo_offset = reinterpret_cast<uint32_t>(mwmo);
+    mwmo = new MwmoChunk_s(mwmo_offset + 0x14, buffer);
   }
 
   ~MhdrChunk_s() {
     SAFE_DELETE(mcin);
+    SAFE_DELETE(mwmo);
   }
 };
