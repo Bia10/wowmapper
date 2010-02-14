@@ -1,9 +1,6 @@
 #pragma once
 
 #include "../chunk_s.h"
-#include <glm/glm.hpp>
-
-#include <iostream>
 
 struct MohdChunk_s : Chunk_s {
   uint32_t num_textures;  //<! number of textures

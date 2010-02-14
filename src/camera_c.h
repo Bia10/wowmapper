@@ -1,6 +1,6 @@
 #pragma once
 
-#include <glm/glm.hpp>
+#include "common.h"
 
 class Camera_c {
  public:

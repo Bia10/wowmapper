@@ -4,7 +4,6 @@
 #include "mpqhandler_c.h"
 #include "adt/adt_c.h"
 #include "wdt/wdt_c.h"
-#include "wmo/wmo_c.h"
 #include "displayer_c.h"
 
 int main(int argc, char **argv) {
@@ -13,17 +12,17 @@ int main(int argc, char **argv) {
 	mpq_handler.OpenFile("common-2.MPQ");
 
 	/* load to buffer */
-	const char *filename = "World\\Maps\\Azeroth\\Azeroth.wdt";
+	const char *filename = "World\\Maps\\Kalimdor\\Kalimdor.wdt";
 	uint8_t *file_buf = NULL;
 	mpq_handler.LoadFileByName(filename, &file_buf);
 
 	/* initialize ADT with file buffer */
-	Wdt_c wdt(&file_buf, "World\\Maps\\Azeroth\\Azeroth");
+	Wdt_c wdt(&file_buf, "World\\Maps\\Kalimdor\\Kalimdor");
 
 
 	/* retrieve adt names list */
 	AdtList_t adt_list;
-	wdt.LoadAdts(mpq_handler, &adt_list, 16, 200);
+	wdt.LoadAdts(mpq_handler, &adt_list, 1, 434);
 
 	//Wmo_c wmo(&file_buf);
 

@@ -13,7 +13,7 @@ struct Chunk_s {
   uint32_t total_size() const { return 0x8 + size; }
 
   Chunk_s() {}
-  Chunk_s(int32_t offset, void *buffer, bool copyData) {
+  Chunk_s(uint32_t offset, void *buffer, bool copyData) {
     /* copy base chunk content */
     uint32_t buf_addr = reinterpret_cast<uint32_t>(buffer);
     void *src_addr = reinterpret_cast<void*>(buf_addr + offset);

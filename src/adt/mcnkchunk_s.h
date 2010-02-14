@@ -1,20 +1,17 @@
 #pragma once
 
-#include <glm/glm.hpp>
-#include <iostream>
-#include <exception>
 #include "mcvtchunk_s.h"
 #include "mcnrchunk_s.h"
 
 /*! @brief MCNK chunk */
-struct McnkChunk_s : Chunk_s {
+struct McnkChunk_s: Chunk_s {
   uint32_t flags;
   uint32_t index_x;
   uint32_t index_y;
   uint32_t num_layers;
   uint32_t num_doodad_refs;
-  McvtChunk_s* mcvt;        //!< heights
-  McnrChunk_s* mcnr;        //!< normals
+  McvtChunk_s* mcvt; //!< heights
+  McnrChunk_s* mcnr; //!< normals
   void* offset_layer;
   void* offset_refs;
   void* offset_alpha;
@@ -24,7 +21,7 @@ struct McnkChunk_s : Chunk_s {
   uint32_t area_id;
   uint32_t num_map_obj_refs;
   uint32_t holes;
-  uint32_t really_low_quality_texturing_map[2][2];  //!< original uint2[8][8]
+  uint32_t really_low_quality_texturing_map[2][2]; //!< original uint2[8][8]
   uint32_t pred_tex;
   uint32_t no_effect_doodad;
   void* offset_snd_emitters;
@@ -45,7 +42,8 @@ struct McnkChunk_s : Chunk_s {
     FLAG_MCCV,
   };
 
-  McnkChunk_s(uint32_t offset, void *buffer) : Chunk_s(offset, buffer, false) {
+  McnkChunk_s(uint32_t offset, void *buffer) :
+    Chunk_s(offset, buffer, false) {
     /* copy MCNK chunk manually to avoid memory corruption */
     uint32_t buf_addr = reinterpret_cast<uint32_t>(buffer);
     void *src_addr = reinterpret_cast<void*>(buf_addr + offset);

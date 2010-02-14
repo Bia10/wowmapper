@@ -1,11 +1,10 @@
 #pragma once
 
 #include "../chunk_s.h"
-#include <string>
-#include <vector>
 
 typedef std::vector<std::string> WmoFilenames_t;
 
+/*! @brief MWMO chunk */
 struct MwmoChunk_s : Chunk_s {
   WmoFilenames_t filenames;
 
@@ -22,8 +21,6 @@ struct MwmoChunk_s : Chunk_s {
     size_t pos = 0;
     while(size > pos) {
       filenames.push_back(wmo_filename_buf+pos);
-      std::cout << "- " << (wmo_filename_buf+pos) << std::endl;
-
       pos += strlen(wmo_filename_buf+pos)+1;
     }
 

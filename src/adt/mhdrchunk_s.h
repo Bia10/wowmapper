@@ -2,6 +2,7 @@
 
 #include "mcinchunk_s.h"
 #include "mwmochunk_s.h"
+#include "modfchunk_s.h"
 
 /*! @brief MHDR chunk */
 struct MhdrChunk_s : Chunk_s {
@@ -13,7 +14,7 @@ struct MhdrChunk_s : Chunk_s {
   MwmoChunk_s *mwmo;
   uint32_t mwid;
   uint32_t mddf;
-  uint32_t modf;
+  ModfChunk_s *modf;
   uint32_t mfbo;
   uint32_t mh2o;
   uint32_t mtfx;
@@ -30,6 +31,10 @@ struct MhdrChunk_s : Chunk_s {
     /* intialize sub chunks: MWMO */
     uint32_t mwmo_offset = reinterpret_cast<uint32_t>(mwmo);
     mwmo = new MwmoChunk_s(mwmo_offset + 0x14, buffer);
+
+    /* intialize sub chunks: MODF */
+    uint32_t modf_offset = reinterpret_cast<uint32_t>(modf);
+    modf = new ModfChunk_s(modf_offset + 0x14, buffer);
   }
 
   ~MhdrChunk_s() {
