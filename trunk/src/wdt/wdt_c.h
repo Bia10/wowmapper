@@ -23,13 +23,15 @@ class Wdt_c {
    * @param mpq_handler MpqHandle_c reference needed to load ADTs from MPQ
    * @param outAdtList Returns a list of ADTs
    */
-  void LoadAdts(MpqHandler_c &mpq_handler, AdtList_t *outAdtList, int32_t count = -1, int32_t offset = 0) const;
+  void LoadAdts(MpqHandler_c &mpq_handler,
+                AdtList_t *outAdtList,
+                uint32_t count = 0xffffffff,
+                uint32_t offset = 0) const;
   void UnloadAdts(AdtList_t *adtList) const;
 
  private:
   void GenerateAdtNames();
 
-  uint8_t *raw_data_;
   std::string map_name_;
   MphdChunk_s mphd_chunk_;
   MainChunk_s main_chunk_;

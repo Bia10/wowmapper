@@ -1,9 +1,7 @@
 #pragma once
 
-#include <string>
-#include <list>
-#include <stdint.h>
 
+#include "common.h"
 #include <libmpq/mpq.h>
 
 typedef std::list<std::string> MpqFileList;

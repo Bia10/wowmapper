@@ -1,7 +1,5 @@
 #pragma once
 
-#include <vector>
-#include <stdint.h>
 #include "camera_c.h"
 #include "adt/adt_c.h"
 #include "wdt/wdt_c.h"

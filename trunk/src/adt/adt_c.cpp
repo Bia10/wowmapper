@@ -1,32 +1,17 @@
 #include "adt_c.h"
-#include <string.h>
-#include <iostream>
 
 #define MHDR_OFFSET 0xC
 #define STEP 2.083333333f       // 100.0f / (3.0f * 16.0f);
 #define XZOFFSET 533.333333333f
 
 Adt_c::Adt_c(uint8_t **buffer, MpqHandler_c *mpqHandler /* = NULL */) :
-  raw_data_(*buffer),
-  mhdr_chunk_(MHDR_OFFSET, raw_data_) {
+  mhdr_chunk_(MHDR_OFFSET, *buffer) {
+  delete [] *buffer;
   *buffer = NULL; // invalidate buffer
 
   if(mpqHandler == NULL) return;
 
-  uint8_t *wmo_buffer = NULL;
-  /* begin loading of wmos here */
-  for (WmoFilenames_t::iterator wmo_name = mhdr_chunk_.mwmo->filenames.begin();
-       wmo_name != mhdr_chunk_.mwmo->filenames.end();
-       ++wmo_name) {
-    std::cout << "Load WMO: " << *wmo_name << std::endl;
-    mpqHandler->LoadFileByName(wmo_name->c_str(), &wmo_buffer);
-    wmo_list_.push_back(Wmo_c(&wmo_buffer, wmo_name->c_str()));
-    wmo_buffer = NULL;
-  }
-}
-
-Adt_c::~Adt_c() {
-  delete[] raw_data_;
+  LoadWmo(mpqHandler);
 }
 
 void Adt_c::GenerateMesh() {
@@ -50,14 +35,30 @@ void Adt_c::GenerateMesh() {
 
         for (int off = 0; off < 12; off++) {
           /* the map files have their X & Z axes reversed, so we have to: */
-          glm::vec3 vert = glm::vec3(XZOFFSET - vertices[off].x,
-                                     vertices[off].y,
-                                     XZOFFSET - vertices[off].z);
+          glm::vec3 vert = glm::vec3(32*XZOFFSET - (mcnk_pos.x - vertices[off].x),
+                                     vertices[off].y + mcnk_pos.y,
+                                     32*XZOFFSET - (mcnk_pos.z - vertices[off].z));
 
-          vertices_[cur_idx + off] = vert + mcnk_pos;
+          vertices_[cur_idx + off] = vert;
           normals_[cur_idx + off] = normals[off];
         }
       }
     }
+  }
+}
+
+void Adt_c::LoadWmo(MpqHandler_c *mpqHandler) {
+  uint8_t *wmo_buffer = NULL;
+
+  /* begin loading of wmos here */
+  for (WmoFilenames_t::iterator wmo_name = mhdr_chunk_.mwmo->filenames.begin();
+       wmo_name != mhdr_chunk_.mwmo->filenames.end();
+       ++wmo_name) {
+    std::cout << "Load WMO: " << *wmo_name << std::endl;
+
+    mpqHandler->LoadFileByName(wmo_name->c_str(), &wmo_buffer);
+    wmo_list_.push_back(new Wmo_c(&wmo_buffer, wmo_name->c_str(), mpqHandler));
+
+    wmo_buffer = NULL;
   }
 }
