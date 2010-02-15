@@ -42,8 +42,8 @@ struct McnkChunk_s: Chunk_s {
     FLAG_MCCV,
   };
 
-  McnkChunk_s(uint32_t offset, void *buffer) :
-    Chunk_s(offset, buffer, false) {
+  McnkChunk_s(uint32_t offset, void *buffer)
+      : Chunk_s(offset, buffer, false) {
     /* copy MCNK chunk manually to avoid memory corruption */
     uint32_t buf_addr = reinterpret_cast<uint32_t>(buffer);
     void *src_addr = reinterpret_cast<void*>(buf_addr + offset);
@@ -51,7 +51,7 @@ struct McnkChunk_s: Chunk_s {
 
     /* intialize sub chunks: MCVT */
     uint32_t mcvt_offset = reinterpret_cast<uint32_t>(mcvt);
-    mcvt = new McvtChunk_s(offset + mcvt_offset, buffer);
+    mcvt = new McvtChunk_s(offset + mcvt_offset, buffer, holes);
     /* intialize sub chunks: MCNR */
     uint32_t mcnr_offset = reinterpret_cast<uint32_t>(mcnr);
     mcnr = new McnrChunk_s(offset + mcnr_offset, buffer);

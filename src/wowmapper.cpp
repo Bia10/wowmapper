@@ -12,17 +12,17 @@ int main(int argc, char **argv) {
 	mpq_handler.OpenFile("common-2.MPQ");
 
 	/* load to buffer */
-	const char *filename = "World\\Maps\\Kalimdor\\Kalimdor.wdt";
+	const char *filename = "World\\Maps\\Azeroth\\Azeroth.wdt";
 	uint8_t *file_buf = NULL;
 	mpq_handler.LoadFileByName(filename, &file_buf);
 
 	/* initialize ADT with file buffer */
-	Wdt_c wdt(&file_buf, "World\\Maps\\Kalimdor\\Kalimdor");
+	Wdt_c wdt(&file_buf, "World\\Maps\\Azeroth\\Azeroth");
 
 
 	/* retrieve adt names list */
 	AdtList_t adt_list;
-	wdt.LoadAdts(mpq_handler, &adt_list, 1, 434);
+	wdt.LoadAdts(mpq_handler, &adt_list, 1, 457);
 
 	//Wmo_c wmo(&file_buf);
 
@@ -40,13 +40,13 @@ int main(int argc, char **argv) {
 	/*AdtList_t adt_list;
 	wdt.LoadAdts(mpq_handler, &adt_list, 32, 500);*/
 
-	std::cout << "Generate meshes ..." << std::endl;
+	/*std::cout << "Generate meshes ..." << std::endl;
 	for(AdtList_t::iterator adt = adt_list.begin();
 	    adt != adt_list.end();
 	    ++adt) {
 	  (*adt)->GenerateMesh();
 	}
-	std::cout << "... finished!" << std::endl;
+	std::cout << "... finished!" << std::endl;*/
 
 	/*Adt_c adt(&file_buf);
 	adt.GenerateMesh();*/

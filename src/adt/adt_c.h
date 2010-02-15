@@ -14,7 +14,6 @@ typedef std::list<Wmo_c*> WmoList_t;
 class Adt_c {
  public:
   Adt_c(uint8_t **buffer, MpqHandler_c *mpqHandler = NULL);
-  void GenerateMesh();
 
   /* adt related */
   const MhdrChunk_s& mhdr_chunk() const { return mhdr_chunk_; }

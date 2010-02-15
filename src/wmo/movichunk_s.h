@@ -15,3 +15,5 @@ struct MoviChunk_s : Chunk_s {
     memcpy(&indices[0], src_addr, size);
   }
 };
+
+typedef std::auto_ptr<MoviChunk_s> MoviChunk_t;
