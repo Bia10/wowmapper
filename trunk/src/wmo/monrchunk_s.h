@@ -2,15 +2,6 @@
 
 #include "../chunk_s.h"
 
-struct SwapNormals_ftor {
-  glm::vec3 operator()(glm::vec3 &value) {
-      float temp = value.y;
-      value.y = value.z;
-      value.z = -temp;
-      return value;
-  }
-};
-
 /*! @brief MONR chunk. */
 struct MonrChunk_s : Chunk_s {
   Points_t normals;
@@ -24,6 +15,10 @@ struct MonrChunk_s : Chunk_s {
     normals.resize(size / sizeof(glm::vec3));
     memcpy(&normals[0], src_addr, size);
 
-    std::transform(normals.begin(), normals.end(), normals.begin(), SwapNormals_ftor());
+    /* normals are stored in X, Z, -Y order so we have to change axes */
+    std::transform(normals.begin(), normals.end(),
+                   normals.begin(), SwapAxes_ftor());
   }
 };
+
+typedef std::auto_ptr<MonrChunk_s> MonrChunk_t;

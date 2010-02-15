@@ -51,7 +51,6 @@ Displayer_c::Displayer_c(int32_t width, int32_t height, const char *title)
   glEnable(GL_DEPTH_TEST);
   glDepthFunc(GL_LEQUAL);
   glClearColor(0, 0, 0.1, 1.0f);
-  //glEnable(GL_NORMALIZE);
 }
 
 Displayer_c::~Displayer_c() {
@@ -60,19 +59,6 @@ Displayer_c::~Displayer_c() {
 
 void Displayer_c::Start(AdtList_t *adtList) {
   adt_list_ = adtList;
-
-  vertices_ = new glm::vec3[adtList->size() * 12 * 64 *256];
-  normales_ = new glm::vec3[adtList->size() * 12 * 64 *256];
-
-  int counter = 0;
-  for(AdtList_t::const_iterator adt = adt_list_->begin();
-          adt != adt_list_->end();
-          ++adt, counter++) {
-    for(int i = 0; i < 12*64*256; i++) {
-      vertices_[counter*12*64*256+i] = (*adt)->vertices()[i];
-      normales_[counter*12*64*256+i] = (*adt)->normals()[i];
-    }
-  }
 
   glutMainLoop();
 }
@@ -101,6 +87,18 @@ void Displayer_c::RenderLoop() {
 
     const ModfChunk_s *modf = (*adt)->mhdr_chunk().modf;
 
+    /* draw terrain */
+    for (int i = 0; i < 256; i++) {
+      const McnkChunk_s &mcnk = *(*adt)->mhdr_chunk().mcin->mcnk_index[i].mcnk;
+
+      glTranslatef(32*533.33333f-mcnk.position.y, mcnk.position.z, 32*533.33333f-mcnk.position.x);
+      glNormalPointer(GL_FLOAT, 0, mcnk.mcnr->normals.data());
+      glVertexPointer(3, GL_FLOAT, 0, mcnk.mcvt->vertices.data());
+      glDrawElements(GL_TRIANGLES, mcnk.mcvt->indices.size(), GL_UNSIGNED_INT, mcnk.mcvt->indices.data());
+      glTranslatef(-(32*533.33333f-mcnk.position.y), -mcnk.position.z, -(32*533.33333f-mcnk.position.x));
+    }
+
+    /* draw wmos */
     for(uint32_t i = 0; i < modf->wmo_info.size(); i++) {
       glm::vec3 pos = modf->wmo_info[i].position;
       glm::vec3 rot = modf->wmo_info[i].orientation;
@@ -140,44 +138,6 @@ void Displayer_c::RenderLoop() {
   glDisableClientState(GL_NORMAL_ARRAY);
   glDisableClientState(GL_VERTEX_ARRAY);
 
-  // std::cout << "############# " << p.x << " " << p.y << " " << p.z << std::endl;
-  /*glBegin(GL_TRIANGLES);
-    for(int i = 0; i < 8*12*64*256; i++) {
-      glNormal3f(normales_[i].x, normales_[i].y, normales_[i].z);
-      glVertex3f(vertices_[i].x - p.y, vertices_[i].y - p.z, vertices_[i].z - p.x);
-    }
-    for(AdtList_t::const_iterator adt = adt_list_->begin();
-        adt != adt_list_->end();
-        ++adt) {
-      const glm::vec3 *vertices = (*adt)->vertices();
-      const glm::vec3 *normals = (*adt)->normals();
-      //std::cout << vertices[0].x - p.x << " " << vertices[0].y - p.y << " " << vertices[0].z - p.z << std::endl;
-
-      for(int i = 0; i < 12*64*256; i++) { //3*4
-        glNormal3f(normals[i].x, normals[i].y, normals[i].z);
-        glVertex3f(vertices[i].x - p.y, vertices[i].y - p.z, vertices[i].z - p.x);
-        glNormal3f(normals[i*12].x, normals[i*12].y, normals[i*12].z);
-        glVertex3f(vertices[i*12].x - p.y, vertices[i*12].y - p.z, vertices[i*12].z - p.x);
-        glNormal3f(normals[i*12+3].x, normals[i*12+3].y, normals[i*12+3].z);
-        glVertex3f(vertices[i*12+3].x - p.y, vertices[i*12+3].y - p.z, vertices[i*12+3].z - p.x);
-        glNormal3f(normals[i*12+6].x, normals[i*12+6].y, normals[i*12+6].z);
-        glVertex3f(vertices[i*12+6].x - p.y, vertices[i*12+6].y - p.z, vertices[i*12+6].z - p.x);
-        glNormal3f(normals[i*12+9].x, normals[i*12+9].y, normals[i*12+9].z);
-        glVertex3f(vertices[i*12+9].x - p.y, vertices[i*12+9].y - p.z, vertices[i*12+9].z - p.x);
-      }
-    }
-  glEnd();*/
-
-  glEnableClientState(GL_VERTEX_ARRAY);
-  glEnableClientState(GL_NORMAL_ARRAY);
-
-  glNormalPointer(GL_FLOAT, 0, normales_);
-  glVertexPointer(3, GL_FLOAT, 0, vertices_);
-  glDrawArrays(GL_TRIANGLES, 0, adt_list_->size() * 12 * 64 * 256);
-
-  glDisableClientState(GL_VERTEX_ARRAY);
-  glDisableClientState(GL_NORMAL_ARRAY);
-
 
   glutSwapBuffers();
 }
@@ -204,10 +164,19 @@ void Displayer_c::MouseCallback(int32_t x, int32_t y) {
 void Displayer_c::KeyboardCallback(uint8_t key, int x, int y) {
   glm::vec3 &cam_dir = camera_.direction();
   glm::vec3 &cam_pos = camera_.position();
-  const float speed = 20.0f;
+  static float speed = 20.0f;
 
   /* key control */
   switch(key) {
+    case 'h': {
+      speed = 5.0f;
+      break; }
+    case 'j': {
+      speed = 50.0f;
+      break; }
+    case 'k': {
+      speed = 200.0f;
+      break; }
     case 'q': {
       camera_.position().y += speed;
       break; }
