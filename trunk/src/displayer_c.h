@@ -10,7 +10,7 @@ class Displayer_c {
  public:
   Displayer_c(int32_t width, int32_t height, const char *title);
   ~Displayer_c();
-  void Start(AdtList_t *adtList);
+  //void Start(AdtList_t *adtList);
 
   DisplayCallbacks_t& display_callbacks() { return display_callbacks_; }
 
@@ -23,7 +23,7 @@ class Displayer_c {
   static DisplayCallbacks_t display_callbacks_;
   static Camera_c camera_;
   static glm::vec2 mouse_pos_;
-  static const AdtList_t *adt_list_;
+  //static const AdtList_t *adt_list_;
 
   int32_t win_id_;
   int32_t width_;

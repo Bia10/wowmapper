@@ -6,18 +6,13 @@
 struct MonrChunk_s : Chunk_s {
   Points_t normals;
 
-  MonrChunk_s(uint32_t offset, void *buffer) : Chunk_s(offset, buffer, false) {
-    /* copy MONR chunk manually to avoid memory corruption */
-    uint32_t buf_addr = reinterpret_cast<uint32_t>(buffer);
-    void *src_addr = reinterpret_cast<void*>(buf_addr + offset + sizeof(Chunk_s));
+  MonrChunk_s() : Chunk_s() {
 
-    /* copy vertex indices to array */
+  }
+
+  virtual void Initialize() {
     normals.resize(size / sizeof(glm::vec3));
-    memcpy(&normals[0], src_addr, size);
-
-    /* normals are stored in X, Z, -Y order so we have to change axes */
-    std::transform(normals.begin(), normals.end(),
-                   normals.begin(), SwapAxes_ftor());
+    CopyData(normals.data());
   }
 };
 

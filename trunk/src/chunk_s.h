@@ -1,33 +1,76 @@
 #pragma once
 
-#include <string.h>
-#include <stdint.h>
-#include <iostream>
-#include "common.h"
+#include "chunkreader_c.h"
 
-/*! @brief Base chunk structure for all chunks. */
-struct Chunk_s {
-  char id[4];
-  uint32_t size;
+typedef std::map<std::string, uint32_t> FieldOffsets_t;
+typedef std::pair<std::string, uint32_t> FieldOffset_t;
 
-  uint32_t total_size() const { return 0x8 + size; }
+const uint32_t DATA_OFFSET = 0x8;
 
-  Chunk_s() {}
-  Chunk_s(uint32_t offset, void *buffer, bool copyData) {
-    /* copy base chunk content */
-    uint32_t buf_addr = reinterpret_cast<uint32_t>(buffer);
-    void *src_addr = reinterpret_cast<void*>(buf_addr + offset);
-    memcpy(this, src_addr, sizeof(Chunk_s));
+/*! \brief  Base chunk structure for all chunks. Inherits ChunkReader_c to
+ *          allow sub chunk initialization. */
+struct Chunk_s : public ChunkReader_c {
+  uint32_t id;    //!< Chunk identifier
+  uint32_t size;  //!< Data size, total size = data size + 8
 
-    if(copyData) {
-      /* copy chunk data */
-      uint32_t this_addr = reinterpret_cast<uint32_t>(this);
-      void *dest_addr = reinterpret_cast<void*>(this_addr + sizeof(Chunk_s));
-      src_addr = reinterpret_cast<void*>(buf_addr + offset + sizeof(Chunk_s));
-      memcpy(dest_addr, src_addr, size);
+ protected:
+  FieldOffsets_t field_offsets_;  //!< Field offset define
+
+ public:
+  /*! \brief  Chunk_s ctor set the default field offsets for every chunk. Use
+   *          the constructor to set them and assign values in Initialize(). */
+  Chunk_s() : id(0), size(0) {
+    // initialize chunk fields
+    field_offsets_.insert(FieldOffset_t("id",   0x0));
+    field_offsets_.insert(FieldOffset_t("size", 0x4));
+  }
+
+  /*! \brief  Assign default field values to variables */
+  void InitializeDefaulFields() {
+    AssignValue("id", &id);
+    AssignValue("size", &size);
+  }
+
+  /*! \brief  Must be defined by every chunk. */
+  virtual void Initialize() = 0;
+
+  /*! \brief  Returns a pointer to a data field.
+   *  \param  field Field string.
+   *  \return Void pointer to data field. */
+  void* operator[] (const char *field) {
+    // find field offset for key and return its pointer on success
+    FieldOffsets_t::const_iterator found = field_offsets_.find(field);
+    if(found != field_offsets_.end()) {
+      return &raw_buffer_[found->second];
     }
 
-    std::cout << id[3] << id[2] << id[1] << id[0] << " chunk initialized: ";
-    std::cout << total_size() << " bytes" << std::endl;
+    std::cout << "Field offset: " << field << " not found." << std::endl;
+    return NULL;
+  }
+
+  /*! \brief  Assigns values of data fields to a given variable.
+   *  \param  field Field string.
+   *  \param  T Variable to fill with the field data.
+   *  \return Returns true if field exists, otherwise false. */
+  template<typename T>
+  bool AssignValue(const char *field, T *out) {
+    // find field offset for key and return its pointer on success
+    FieldOffsets_t::const_iterator found = field_offsets_.find(field);
+    if(found != field_offsets_.end()) {
+      *out = *reinterpret_cast<T*>(&raw_buffer_[found->second]);
+      return true;
+    }
+
+    std::cout << "Field offset: " << field << " not found." << std::endl;
+    return false;
+  }
+
+  /*! \brief  Copies ALL data (beginning at +0x8) to a given buffer.
+   *  \param  dest Destination buffer. */
+  void CopyData(void *dest) const {
+    uint8_t *data = reinterpret_cast<uint8_t*>(dest);
+    // create a rs iterator to copy the data
+    std::raw_storage_iterator<uint8_t*, uint8_t> raw_iter(data);
+    std::copy(raw_buffer_.begin() + DATA_OFFSET, raw_buffer_.end(), raw_iter);
   }
 };

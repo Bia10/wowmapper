@@ -4,12 +4,12 @@
 #include "common.h"
 #include <libmpq/mpq.h>
 
-typedef std::list<std::string> MpqFileList;
+typedef std::list<std::string> MpqFileList_t;
 
 /*! \brief MpqHandler simplifies mpq archive access. */
 class MpqHandler_c {
  public:
-  /*! @brief Initializes handler and sets default directory.
+  /*! \brief Initializes handler and sets default directory.
    *
    *  @param defaultDir Default directory string
    */
@@ -32,7 +32,7 @@ class MpqHandler_c {
    * @param outMap Pointer to MpqIndexNameMap
    * @return Returns amount of entries which matched the filter.
    */
-  int32_t GetFileListByFilter(const char *filter, MpqFileList *outList) const;
+  int32_t GetFileListByFilter(const char *filter, MpqFileList_t *outList) const;
   /*! @brief Reads a file from our opened MPQ and returns it via buffer.
    *
    * @param filename Full path name of the file
@@ -41,13 +41,12 @@ class MpqHandler_c {
    */
   int64_t LoadFileByName(const char *filename, uint8_t **buffer) const;
 
-  const MpqFileList& mpq_file_list() const { return mpq_file_list_; }
+  const MpqFileList_t& mpq_file_list() const { return mpq_file_list_; }
   mpq_archive_s* mpq_arc() const { return mpq_arc_; }
 
  private:
-  bool Initialize();
 
   std::string default_dir_;
   mpq_archive_s *mpq_arc_;
-  MpqFileList mpq_file_list_;
+  MpqFileList_t mpq_file_list_;
 };
