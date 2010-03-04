@@ -16,5 +16,9 @@ struct MohdChunk_s : Chunk_s {
   glm::vec3 bbox_max;     //<! Bounding Box max
   uint32_t _filler0;      //<! Unknown
 
-  MohdChunk_s(uint32_t offset, void *buffer) : Chunk_s(offset, buffer, true) { }
+  MohdChunk_s() : Chunk_s() { }
+
+  virtual void Initialize() {
+
+  }
 };

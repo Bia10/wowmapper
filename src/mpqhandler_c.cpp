@@ -6,17 +6,10 @@
 MpqHandler_c::MpqHandler_c(const char *defaultDir)
     : default_dir_("./"),
       mpq_arc_(NULL) {
-  Initialize();
 }
 
 MpqHandler_c::~MpqHandler_c() {
   libmpq__archive_close(mpq_arc_);
-  libmpq__shutdown();
-}
-
-bool MpqHandler_c::Initialize() {
-  printf("Init libmpq version %s\n", libmpq__version());
-  return libmpq__init() == LIBMPQ_SUCCESS;
 }
 
 void MpqHandler_c::SetDefaultDirectory(const char *directory) {
@@ -77,10 +70,10 @@ int32_t MpqHandler_c::OpenFile(const char *filename) {
 }
 
 int32_t MpqHandler_c::GetFileListByFilter(const char *filter,
-                                          MpqFileList *outList) const {
+										  MpqFileList_t *outList) const {
   int32_t num_files = 0;
   /* insert into outList if we find our filter in the string */
-  for(MpqFileList::const_iterator mpq_file = mpq_file_list_.begin();
+  for(MpqFileList_t::const_iterator mpq_file = mpq_file_list_.begin();
       mpq_file != mpq_file_list_.end();
       ++mpq_file) {
     if (mpq_file->find(filter, 0) != std::string::npos) {

@@ -2,8 +2,8 @@
 
 #include "../chunk_s.h"
 
-/*! \brief MWMO chunk. */
-struct MwmoChunk_s : Chunk_s {
+/*! \brief MMDX chunk. */
+struct MmdxChunk_s : Chunk_s {
   Buffer_t filename_buffer;
 
   virtual void Initialize() {

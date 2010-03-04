@@ -1,28 +1,42 @@
-#include <iostream>
-#include <fstream>
-
 #include "mpqhandler_c.h"
-#include "adt/adt_c.h"
+#include "chunks/adt/adt_c.h"
 #include "wdt/wdt_c.h"
-#include "displayer_c.h"
+
+typedef std::list<Adt_c> AdtList_t;
 
 int main(int argc, char **argv) {
 
 	MpqHandler_c mpq_handler;
 	mpq_handler.OpenFile("common-2.MPQ");
 
-	/* load to buffer */
-	const char *filename = "World\\Maps\\Azeroth\\Azeroth.wdt";
+	// load to buffer
+	const char *filename = "World\\maps\\Azeroth\\Azeroth.wdt";
 	uint8_t *file_buf = NULL;
-	mpq_handler.LoadFileByName(filename, &file_buf);
+	int64_t size = mpq_handler.LoadFileByName(filename, &file_buf);
 
-	/* initialize ADT with file buffer */
-	Wdt_c wdt(&file_buf, "World\\Maps\\Azeroth\\Azeroth");
+	// initialize ADT with file buffer
+	Wdt_c wdt(file_buf, size, "World\\maps\\Azeroth\\Azeroth");
+	delete [] file_buf; file_buf = NULL;
 
+	AdtList_t adt_list;
+
+	for (AdtNames_t::const_iterator adt_name = wdt.adt_names().begin();
+	     adt_name != wdt.adt_names().end();
+	     ++adt_name) {
+	  std::cout << *adt_name << std::endl;
+	  size = mpq_handler.LoadFileByName(adt_name->c_str(), &file_buf);
+
+	  // adt to list and assign buffer
+	  Adt_c adt(file_buf, size);
+
+	  delete [] file_buf; file_buf = NULL;
+	}
+
+	//std::cout << "ADTs loaded: " << adt_list.size() << std::endl;
 
 	/* retrieve adt names list */
-	AdtList_t adt_list;
-	wdt.LoadAdts(mpq_handler, &adt_list, 1, 457);
+	//AdtList_t adt_list;
+	//wdt.LoadAdts(mpq_handler, &adt_list, 49, 0);
 
 	//Wmo_c wmo(&file_buf);
 
@@ -51,8 +65,10 @@ int main(int argc, char **argv) {
 	/*Adt_c adt(&file_buf);
 	adt.GenerateMesh();*/
 
-	Displayer_c disp(800, 600, "WoW Mapper");
-	disp.Start(&adt_list);
+	//Displayer_c disp(800, 600, "WoW Mapper");
+	//disp.Start(&adt_list);
+
+	delete [] file_buf;
 
 	return 0;
 }

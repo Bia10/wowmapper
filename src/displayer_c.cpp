@@ -8,7 +8,7 @@
 DisplayCallbacks_t Displayer_c::display_callbacks_;
 Camera_c Displayer_c::camera_;
 glm::vec2 Displayer_c::mouse_pos_(0.0f, 0.0f);
-const AdtList_t *Displayer_c::adt_list_= NULL;
+//const AdtList_t *Displayer_c::adt_list_= NULL;
 
 glm::vec3 *Displayer_c::vertices_ = NULL;
 glm::vec3 *Displayer_c::normales_ = NULL;
@@ -57,18 +57,18 @@ Displayer_c::~Displayer_c() {
   glutDestroyWindow(win_id_);
 }
 
-void Displayer_c::Start(AdtList_t *adtList) {
+/*void Displayer_c::Start(AdtList_t *adtList) {
   adt_list_ = adtList;
 
   glutMainLoop();
-}
+}*/
 
 void Displayer_c::RenderLoop() {
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
   glLoadIdentity();
   gluPerspective(60, 4/3.0f, 1.0, 100000.0);
 
-  glm::vec3 world_trans = adt_list_->front()->mhdr_chunk().mcin->mcnk_index[0].mcnk->position;
+  /*glm::vec3 world_trans = adt_list_->front()->mhdr_chunk().mcin->mcnk_index[0].mcnk->position;
 
   glm::vec3 curr_pos = camera_.position();
   glm::vec3 look_at = curr_pos + camera_.direction();
@@ -87,7 +87,7 @@ void Displayer_c::RenderLoop() {
 
     const ModfChunk_s *modf = (*adt)->mhdr_chunk().modf;
 
-    /* draw terrain */
+    // draw terrain
     for (int i = 0; i < 256; i++) {
       const McnkChunk_s &mcnk = *(*adt)->mhdr_chunk().mcin->mcnk_index[i].mcnk;
 
@@ -98,13 +98,13 @@ void Displayer_c::RenderLoop() {
       glTranslatef(-(32*533.33333f-mcnk.position.y), -mcnk.position.z, -(32*533.33333f-mcnk.position.x));
     }
 
-    /* draw wmos */
+    // draw wmos
     for(uint32_t i = 0; i < modf->wmo_info.size(); i++) {
       glm::vec3 pos = modf->wmo_info[i].position;
       glm::vec3 rot = modf->wmo_info[i].orientation;
 
       uint32_t counter = 0;
-      /* draw wmo if id matches */
+      // draw wmo if id matches
       for (WmoList_t::const_iterator wmo = (*adt)->wmo_list().begin();
            wmo != (*adt)->wmo_list().end();
            ++wmo, counter++) {
@@ -133,7 +133,7 @@ void Displayer_c::RenderLoop() {
       }
 
     }
-  }
+  }*/
 
   glDisableClientState(GL_NORMAL_ARRAY);
   glDisableClientState(GL_VERTEX_ARRAY);
