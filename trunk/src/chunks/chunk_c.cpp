@@ -34,9 +34,14 @@ bool Chunk_c::GetSubChunk(const char *id,
 
 	if (found != buffer_.end()) {
 		try {
-			last = found+GetChunkSize(found)+CHUNK_DATA_OFFSET;
+		  // get first and last iter
+			size_t size = GetChunkSize(found);
+			found += CHUNK_DATA_OFFSET;
+			last = found + size;
+
 			subChunk->buffer_.assign(found, last);
 			subChunk->Initialize();
+			subChunk->buffer_.clear();
 			return true;
 		} catch (std::exception &e) {
 			std::cout << __FILE__ << " " << e.what() << std::endl;
@@ -52,9 +57,10 @@ bool Chunk_c::GetSubChunk(uint32_t offset, Chunk_c *subChunk) const {
 		size_t size = *reinterpret_cast<const size_t*>(chunk+CHUNK_SIZE_OFFSET);
 
 		if ((offset + CHUNK_DATA_OFFSET + size) <= buffer_.size()) {
-			Buffer_t::const_iterator first = buffer_.begin()+offset;
+			Buffer_t::const_iterator first = buffer_.begin()+offset+CHUNK_DATA_OFFSET;
 			subChunk->buffer_.assign(first, first+size);
 			subChunk->Initialize();
+			subChunk->buffer_.clear();
 			return true;
 		}
 	} catch (std::exception &e) {

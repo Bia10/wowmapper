@@ -28,27 +28,49 @@ class Chunk_c {
    * \return Returns false if offset is out of range, otherwise true. */
 	bool GetSubChunk(uint32_t offset, Chunk_c *subChunk) const;
 
+	const Chunk_c *parent() { return parent_; }
+
  protected:
+	/*! \brief Returns a data field from the buffer, supports PODs only right now.
+	 *  \param offset Offset to data field.
+	 *  \return Returns a reference to the data. */
 	template<typename T> const T& GetField(uint32_t offset) const;
+	template<typename T> void CopyDataBlock(Buffer_t &buffer, std::vector<T> *dest);
+	template<typename T> void CopyDataBlock(Buffer_t &buffer, uint32_t num_elements, std::vector<T> *dest);
 	virtual void Initialize() {}
 
-	Chunk_c *parent_;				//<! Parent chunk
+	Chunk_c *parent_;  //<! Parent chunk
+	Buffer_t buffer_;  //<! Chunk buffer
 
  private:
  	bool AssignBuffer(const uint8_t *buffer, uint32_t length);
  	size_t GetChunkSize(Buffer_t::const_iterator &first) const;
-
-	Buffer_t buffer_;     	//<! Chunk buffer
 };
 
 template<typename T>
 const T& Chunk_c::GetField(uint32_t offset) const {
 	try {
-		return *reinterpret_cast<const T*>(&buffer_.at(offset+CHUNK_DATA_OFFSET));
+		return *reinterpret_cast<const T*>(&buffer_.at(offset));
 	} catch (std::exception &e) {
 		std::cout << __FILE__ << " " << e.what() << std::endl;
 	}
 
 	T t;
 	return t;
+}
+
+template<typename T>
+void Chunk_c::CopyDataBlock(Buffer_t &buffer, std::vector<T> *dest) {
+  uint8_t *data = reinterpret_cast<uint8_t*>(dest->data());
+  std::raw_storage_iterator<uint8_t*, uint8_t> raw_iter(data);
+
+  std::copy(buffer.begin(), buffer.end(), raw_iter);
+}
+
+template<typename T>
+void Chunk_c::CopyDataBlock(Buffer_t &buffer, uint32_t num_elements, std::vector<T> *dest) {
+  uint8_t *data = reinterpret_cast<uint8_t*>(dest->data());
+  std::raw_storage_iterator<uint8_t*, uint8_t> raw_iter(data);
+
+  std::copy(buffer.begin(), buffer.begin()+(num_elements*sizeof(T)), raw_iter);
 }

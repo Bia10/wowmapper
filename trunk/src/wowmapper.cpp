@@ -27,7 +27,7 @@ int main(int argc, char **argv) {
 	  size = mpq_handler.LoadFileByName(adt_name->c_str(), &file_buf);
 
 	  // adt to list and assign buffer
-	  Adt_c adt(file_buf, size);
+	  Adt_c adt(file_buf, size, mpq_handler);
 
 	  delete [] file_buf; file_buf = NULL;
 	}
