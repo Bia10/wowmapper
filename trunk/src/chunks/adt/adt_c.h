@@ -15,6 +15,10 @@ class Adt_c : public Chunk_c {
  public:
 	Adt_c(const uint8_t *buffer, uint32_t length, MpqHandler_c &mpq_h);
 
+	const Points_t& vertices() const { return vertices_; }
+	const Points_t& normals() const { return normals_; }
+	const Indices32_t& indices() const { return indices_; }
+
  private:
 	MhdrChunk_s mhdr_;
 	MmdxChunk_s mmdx_;
@@ -24,4 +28,8 @@ class Adt_c : public Chunk_c {
 	MddfChunk_s mddf_;
 	ModfChunk_s modf_;
 	Mh2oChunk_s mh2o_;
+
+	Points_t vertices_;
+	Points_t normals_;
+	Indices32_t indices_;
 };

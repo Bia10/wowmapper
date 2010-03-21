@@ -17,6 +17,8 @@
 #include <sstream>
 
 #include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/quaternion.hpp>
 
 /* TYPEDEFS */
 typedef std::vector<glm::vec3>    Points_t;
@@ -39,3 +41,8 @@ static glm::vec3 SwapAxes(glm::vec3 &vec) {
 }
 
 #define UNIT 2.083333333f // 100.0f / (3.0f * 16.0f);
+
+struct BlockInfo_s {
+  uint32_t num;
+  uint32_t offset;
+};
