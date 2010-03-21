@@ -15,14 +15,5 @@ struct MhdrChunk_s : public Chunk_c {
 	virtual void Initialize() {
     uint32_t chunk_offset = GetField<uint32_t>(0x04) + SUB_REL_OFFSET;
     parent_->GetSubChunk(chunk_offset, &mcin);
-
-    /*chunk_offset = GetField<uint32_t>(0x0c) + SUB_REL_OFFSET;
-    parent_->GetSubChunk(chunk_offset, &mmdx);
-
-    chunk_offset = GetField<uint32_t>(0x10) + SUB_REL_OFFSET;
-    parent_->GetSubChunk(chunk_offset, &mmid);
-
-    chunk_offset = GetField<uint32_t>(0x14) + SUB_REL_OFFSET;
-    parent_->GetSubChunk(chunk_offset, &mwmo);*/
   }
 };

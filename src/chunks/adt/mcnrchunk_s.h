@@ -13,6 +13,15 @@ struct McnrChunk_s : public Chunk_c {
 
   McnrChunk_s(Chunk_c *parent) : Chunk_c(parent), normals(435) {}
 
+  void GetNormals(Points_t *buffer) {
+    buffer->reserve(145);
+    for (int i = 0; i < 145; i++) {
+      buffer->push_back(glm::vec3(normals.at(i*3+0),    // x
+                                  normals.at(i*3+1),    // y
+                                  normals.at(i*3+2)));  // z
+    }
+  }
+
  protected:
   virtual void Initialize() {
     Normals_t temp_normals(435);

@@ -4,14 +4,20 @@
 
 class Camera_c {
  public:
-  Camera_c(glm::vec3 const &position = glm::vec3(0.0f, 0.0f, 0.0f));
+  Camera_c(const glm::vec3 &position);
 
-  glm::vec3& position() { return position_; }
-  glm::vec2& rotation() { return rotation_; }
-  glm::vec3& direction() { return direction_; }
+  void Rotate(float mx, float my);
+  void SetMousePos(float mx, float my);
+  void Walk(float speed);
+  void Strafe(float speed);
+
+  const glm::vec3& position() const { return position_; }
+  const glm::vec3& lookat() const { return position_+direction_; }
+  const glm::vec3& direction() const { return direction_; }
 
  private:
   glm::vec3 position_;
-  glm::vec2 rotation_;
   glm::vec3 direction_;
+  glm::vec2 mouse_pos_;
+  glm::vec2 yaw_pitch_;
 };
