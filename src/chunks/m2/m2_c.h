@@ -18,8 +18,8 @@ class M2_c : public Chunk_c {
  public:
   M2_c(const uint8_t *buffer, uint32_t length);
 
-  void get_vertex_buffer(Points_t *buffer) const;
-  void get_normal_buffer(Points_t *buffer) const;
+  void GetVertices(Points_t *buffer) const;
+  void GetNormals(Points_t *buffer) const;
 
   const M2Vertices_t& vertices() const { return vertices_; }
   const Points_t& bv_vertices() const { return bv_vertices_; }

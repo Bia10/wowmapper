@@ -23,17 +23,18 @@ M2_c::M2_c(const uint8_t *buffer, uint32_t length)
   CopyDataBlock(bv_vertex_buffer, &bv_vertices_);
 }
 
-void M2_c::get_vertex_buffer(Points_t *buffer) const {
+void M2_c::GetVertices(Points_t *buffer) const {
   buffer->reserve(vertices_.size());
 
   for (M2Vertices_t::const_iterator vtx = vertices_.begin();
        vtx != vertices_.end();
        ++vtx) {
-    buffer->push_back(glm::vec3(vtx->position.x, vtx->position.z, vtx->position.y));
+    //buffer->push_back(glm::vec3(vtx->position.x, -vtx->position.z, vtx->position.y));
+    buffer->push_back(glm::vec3(vtx->position.x, -vtx->position.z, vtx->position.y));
   }
 }
 
-void M2_c::get_normal_buffer(Points_t *buffer) const {
+void M2_c::GetNormals(Points_t *buffer) const {
   buffer->reserve(vertices_.size());
 
   for (M2Vertices_t::const_iterator vtx = vertices_.begin();

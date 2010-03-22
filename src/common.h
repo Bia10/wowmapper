@@ -40,6 +40,15 @@ static glm::vec3 SwapAxes(glm::vec3 &vec) {
   return glm::vec3(vec.x, vec.z, -vec.y);
 }
 
+template<typename T>
+static void InsertIndices(std::vector<T> &ins, T offset, std::vector<T> *out) {
+  // increment index values by offset
+  std::vector<T> add(ins.size(), offset);
+  std::transform(ins.begin(), ins.end(), add.begin(), ins.begin(), std::plus<T>());
+
+  out->insert(out->end(), ins.begin(), ins.end());
+}
+
 #define UNIT 2.083333333f // 100.0f / (3.0f * 16.0f);
 
 struct BlockInfo_s {
