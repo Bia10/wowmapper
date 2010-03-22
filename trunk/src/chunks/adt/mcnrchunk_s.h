@@ -17,8 +17,8 @@ struct McnrChunk_s : public Chunk_c {
     buffer->reserve(145);
     for (int i = 0; i < 145; i++) {
       buffer->push_back(glm::vec3(normals.at(i*3+0),    // x
-                                  normals.at(i*3+1),    // y
-                                  normals.at(i*3+2)));  // z
+                                  normals.at(i*3+2),    // z
+                                  normals.at(i*3+1)));  // y
     }
   }
 

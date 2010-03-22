@@ -20,6 +20,8 @@ class Adt_c : public Chunk_c {
 	const Indices32_t& indices() const { return indices_; }
 
  private:
+	void GenerateTerrain();
+
 	MhdrChunk_s mhdr_;
 	MmdxChunk_s mmdx_;
 	MmidChunk_s mmid_;
