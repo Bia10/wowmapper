@@ -48,17 +48,35 @@ int main(int argc, char **argv) {
 
 	AdtNames_t::const_iterator name = wdt.adt_names().begin();
 
-	for(int i = 0; i < 511; i++) { ++name; }
+	Points_t vertices, normals;
+	Indices32_t indices;
 
-	size = mpq_handler.LoadFileByName(name->c_str(), &file_buf);
-	Adt_c adt(file_buf, size, mpq_handler);
+	for (int i = 0; i < 276; i++) { ++name; }
 
-	std::cout << adt.indices().size() << std::endl;
-	std::cout << adt.vertices().at(12876).x << " " << adt.vertices().at(12876).y << " " << adt.vertices().at(12876).z << std::endl;
+
+
+	for (int i = 0; i < 128; i++) {
+	  size = mpq_handler.LoadFileByName(name->c_str(), &file_buf);
+	  Adt_c adt(file_buf, size, mpq_handler);
+
+	  vertices.insert(vertices.end(), adt.vertices().begin(), adt.vertices().end());
+	  normals.insert(normals.end(), adt.normals().begin(), adt.normals().end());
+
+	  InsertIndices(adt.indices(), vertices.size()-adt.vertices().size(), &indices);
+
+	  delete [] file_buf;
+	  file_buf = NULL;
+
+	  ++name;
+	}
+
+	std::cout << "Triangles visible: " << indices.size() << std::endl;
 
   GlView_c gl_view(800,  600, "glview");
-  gl_view.Initialize();
-  gl_view.SetBuffers(&adt.vertices(), &adt.normals(), &adt.indices());
+  gl_view.Initialize(indices.size());
+  gl_view.SetBuffers(&vertices, &normals, &indices);
+  vertices.clear(); normals.clear(); indices.clear();
+
   gl_view.Go();
 
 	return 0;

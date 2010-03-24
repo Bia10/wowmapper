@@ -46,14 +46,11 @@ Adt_c::Adt_c(const uint8_t *buffer, uint32_t length, MpqHandler_c &mpq_h)
 
       glm::mat4 transform(1.0f);
       transform = glm::scale(transform, glm::vec3(info.scale/1024.0f));
-      transform = glm::rotate(transform, info.orientation.y-90, glm::vec3(0,1,0));
-      transform = glm::rotate(transform, 180+info.orientation.z, glm::vec3(1,0,0));
+
+
+      transform = glm::rotate(transform, 180-info.orientation.z, glm::vec3(1,0,0));
+      transform = glm::rotate(transform, 90-info.orientation.y, glm::vec3(0,1,0));
       transform = glm::rotate(transform, -info.orientation.x, glm::vec3(0,0,1));
-
-
-
-
-
 
       /*transform = glm::rotate(transform, info.orientation.y+180, glm::vec3(0, 1, 0));
       transform = glm::rotate(transform, info.orientation.z, glm::vec3(0, 0, 1));
@@ -69,6 +66,7 @@ Adt_c::Adt_c(const uint8_t *buffer, uint32_t length, MpqHandler_c &mpq_h)
            ++vtx) {
         glm::vec4 vertex(vtx->x, vtx->y, vtx->z, 1.0f);
         vertex = vertex*transform;
+        //vertex.y += 0.5f;
 
         *vtx = glm::vec3(vertex)+info.position;
       }

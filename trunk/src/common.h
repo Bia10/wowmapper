@@ -41,12 +41,15 @@ static glm::vec3 SwapAxes(glm::vec3 &vec) {
 }
 
 template<typename T>
-static void InsertIndices(std::vector<T> &ins, T offset, std::vector<T> *out) {
+static void InsertIndices(const std::vector<T> &ins, T offset, std::vector<T> *out) {
+  std::vector<T> ins_cpy(ins.begin(), ins.end());
+
   // increment index values by offset
   std::vector<T> add(ins.size(), offset);
-  std::transform(ins.begin(), ins.end(), add.begin(), ins.begin(), std::plus<T>());
+  std::transform(ins_cpy.begin(), ins_cpy.end(), add.begin(),
+      ins_cpy.begin(), std::plus<T>());
 
-  out->insert(out->end(), ins.begin(), ins.end());
+  out->insert(out->end(), ins_cpy.begin(), ins_cpy.end());
 }
 
 #define UNIT 2.083333333f // 100.0f / (3.0f * 16.0f);
