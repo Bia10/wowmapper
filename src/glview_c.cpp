@@ -1,6 +1,7 @@
 #include "glview_c.h"
 
 Camera_c GlView_c::camera_(glm::vec3(19487.4f, 53.9951f, 26324.9f));
+uint32_t GlView_c::indices_;
 
 GlView_c::GlView_c(int32_t width, int32_t height, const char *title)
     : win_id_(0),
@@ -13,7 +14,9 @@ GlView_c::~GlView_c() {
   glutDestroyWindow(win_id_);
 }
 
-void GlView_c::Initialize() {
+void GlView_c::Initialize(uint32_t indices) {
+  indices_ = indices;
+
   // initialize glut and display mode
   glutInit(&win_id_, NULL);
   glutInitDisplayMode(GLUT_DEPTH | GLUT_RGB | GLUT_DOUBLE);
@@ -90,7 +93,7 @@ void GlView_c::Render() {
   glEnableClientState(GL_VERTEX_ARRAY);
   glEnableClientState(GL_NORMAL_ARRAY);
 
-  glDrawElements(GL_TRIANGLES, 438840, GL_UNSIGNED_INT, NULL);
+  glDrawElements(GL_TRIANGLES, indices_, GL_UNSIGNED_INT, NULL);
 
   glDisableClientState(GL_VERTEX_ARRAY);
   glDisableClientState(GL_NORMAL_ARRAY);

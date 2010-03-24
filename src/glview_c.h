@@ -11,7 +11,7 @@ class GlView_c {
   GlView_c(int32_t width, int32_t height, const char *title);
   ~GlView_c();
 
-  void Initialize();
+  void Initialize(uint32_t indices);
   void SetBuffers(const Points_t *vertices, const Points_t *normals, const Indices32_t *indices);
   void Go() const { glutMainLoop(); }
 
@@ -31,4 +31,5 @@ class GlView_c {
   const char *title_;
 
   static Camera_c camera_;
+  static uint32_t indices_;
 };
