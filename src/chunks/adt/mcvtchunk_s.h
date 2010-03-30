@@ -23,11 +23,11 @@ struct McvtChunk_s : public Chunk_c {
       bool isRow9x9 = col_idx < 9;
 
       if (isRow9x9) { // if it's a row of the outer 9x9 vector ...
-        vertices->at(i).x = 533.33f*32 + (col_idx * UNIT * 2 - UNIT) - position_.y;
-        vertices->at(i).z = 533.33f*32 + (row_idx * UNIT * 2 - UNIT) - position_.x;
+        vertices->at(i).x = (col_idx * UNIT * 2 - UNIT) - position_.y + 17066.66667f;
+        vertices->at(i).z = (row_idx * UNIT * 2 - UNIT) - position_.x + 17066.66667f;
       } else {        // if it's a row of the inner 8x8 vector ...
-        vertices->at(i).x = 533.33f*32 + ((col_idx-9) * UNIT * 2) - position_.y;
-        vertices->at(i).z = 533.33f*32 + (row_idx * UNIT * 2) - position_.x;
+        vertices->at(i).x = ((col_idx-9) * UNIT * 2) - position_.y + 17066.66667f;
+        vertices->at(i).z = (row_idx * UNIT * 2) - position_.x + 17066.66667f;
       }
       vertices->at(i).y = heights.at(i) + position_.z;
     }

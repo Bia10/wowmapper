@@ -3,24 +3,34 @@
 M2_c::M2_c(const uint8_t *buffer, uint32_t length)
     : Chunk_c(buffer, length) {
   // retrieve information blocks
-  BlockInfo_s vertices = GetField<BlockInfo_s>(0x3c);
-  vertices_.resize(vertices.num);
-  BlockInfo_s bv_indices = GetField<BlockInfo_s>(0xd8);
-  bv_indices_.resize(bv_indices.num);
-  BlockInfo_s bv_vertices = GetField<BlockInfo_s>(0xe0);
-  bv_vertices_.resize(bv_vertices.num);
+  BlockInfo_s vtx_info = GetField<BlockInfo_s>(0x3c);
+  vertices_.resize(vtx_info.num);
+
+  BlockInfo_s bv_idx_info = GetField<BlockInfo_s>(0xd8);
+  bv_indices_.resize(bv_idx_info.num);
+  BlockInfo_s bv_vtx_info = GetField<BlockInfo_s>(0xe0);
+  bv_vertices_.resize(bv_vtx_info.num);
+  BlockInfo_s bv_norm_info = GetField<BlockInfo_s>(0xe8);
+  bv_normals_.resize(bv_norm_info.num);
+
 
   // prepare buffers to fill vectors with CopyDataBlock
-  Buffer_t vertex_buffer(buffer_.begin()+vertices.offset,
-      buffer_.begin()+vertices.offset+sizeof(M2Vertex_s)*vertices.num);
-  Buffer_t bv_index_buffer(buffer_.begin()+bv_indices.offset,
-      buffer_.begin()+bv_indices.offset+sizeof(uint16_t)*bv_indices.num);
-  Buffer_t bv_vertex_buffer(buffer_.begin()+bv_vertices.offset,
-        buffer_.begin()+bv_vertices.offset+sizeof(glm::vec3)*bv_vertices.num);
+  Buffer_t vtx_buf(buffer_.begin()+vtx_info.offset,
+      buffer_.begin()+vtx_info.offset+sizeof(M2Vertex_s)*vtx_info.num);
 
-  CopyDataBlock(vertex_buffer, &vertices_);
-  CopyDataBlock(bv_index_buffer, &bv_indices_);
-  CopyDataBlock(bv_vertex_buffer, &bv_vertices_);
+  Buffer_t bv_idx_buf(buffer_.begin()+bv_idx_info.offset,
+      buffer_.begin()+bv_idx_info.offset+sizeof(uint16_t)*bv_idx_info.num);
+  Buffer_t bv_vtx_buf(buffer_.begin()+bv_vtx_info.offset,
+      buffer_.begin()+bv_vtx_info.offset+sizeof(glm::vec3)*bv_vtx_info.num);
+  Buffer_t bv_norm_buf(buffer_.begin()+bv_norm_info.offset,
+      buffer_.begin()+bv_norm_info.offset+sizeof(glm::vec3)*bv_norm_info.num);
+
+
+  CopyDataBlock(vtx_buf, &vertices_);
+
+  CopyDataBlock(bv_idx_buf, &bv_indices_);
+  CopyDataBlock(bv_vtx_buf, &bv_vertices_);
+  CopyDataBlock(bv_norm_buf, &bv_normals_);
 }
 
 void M2_c::GetVertices(Points_t *buffer) const {
@@ -29,8 +39,7 @@ void M2_c::GetVertices(Points_t *buffer) const {
   for (M2Vertices_t::const_iterator vtx = vertices_.begin();
        vtx != vertices_.end();
        ++vtx) {
-    //buffer->push_back(glm::vec3(vtx->position.x, -vtx->position.z, vtx->position.y));
-    buffer->push_back(glm::vec3(vtx->position.x, -vtx->position.z, vtx->position.y));
+    buffer->push_back(vtx->position);
   }
 }
 

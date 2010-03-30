@@ -10,6 +10,7 @@ class Camera_c {
   void SetMousePos(float mx, float my);
   void Walk(float speed);
   void Strafe(float speed);
+  void SwimUp(float speed);
 
   const glm::vec3& position() const { return position_; }
   const glm::vec3& lookat() const { return position_+direction_; }

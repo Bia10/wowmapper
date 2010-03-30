@@ -14,7 +14,7 @@ void Camera_c::Rotate(float mx, float my) {
   rot_mtx = glm::rotate(rot_mtx, yaw_pitch_.y, glm::vec3(1, 0, 0));
   rot_mtx = glm::rotate(rot_mtx, yaw_pitch_.x, glm::vec3(0, 1, 0));
 
-  direction_ = glm::normalize(glm::vec3(0, 0, 1)*glm::mat3(rot_mtx));
+  direction_ = glm::vec3(0, 0, 1)*glm::mat3(rot_mtx);
 }
 
 void Camera_c::SetMousePos(float mx, float my) {
@@ -28,4 +28,12 @@ void Camera_c::Walk(float speed) {
 void Camera_c::Strafe(float speed) {
   glm::vec3 dir_n = glm::normalize(glm::vec3(-direction_.z, 0.0f, direction_.x));
   position_ +=  dir_n * speed;
+}
+
+void Camera_c::SwimUp(float speed) {
+  glm::mat4 rot_mtx;
+  rot_mtx = glm::rotate(rot_mtx, yaw_pitch_.y, glm::vec3(1, 0, 0));
+  rot_mtx = glm::rotate(rot_mtx, yaw_pitch_.x, glm::vec3(0, 1, 0));
+
+  position_ += direction_ + glm::vec3(0, speed, 0)*glm::mat3(rot_mtx);
 }

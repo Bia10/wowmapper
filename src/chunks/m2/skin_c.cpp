@@ -21,9 +21,13 @@ Skin_c::Skin_c(const uint8_t *buffer, uint32_t length)
 void Skin_c::GetIndices(Indices32_t *buffer) const {
   buffer->reserve(triangles_.size());
 
-  for (Indices16_t::const_iterator idx = triangles_.begin();
-       idx != triangles_.end();
-       ++idx) {
-    buffer->push_back(indices_.at(*idx));
+  try {
+    for (Indices16_t::const_iterator idx = triangles_.begin();
+         idx != triangles_.end();
+         ++idx) {
+      buffer->push_back(indices_.at(*idx));
+    }
+  } catch(std::exception &e) {
+    return;
   }
 }
