@@ -40,6 +40,9 @@ struct McnkChunk_s : public Chunk_c {
 
     GetSubChunk("RNCM", 4, &mcnr);
 
+    // workaround :p
+    if ((num_doodad_refs + num_wmo_refs) == 0) { return; }
+
     mcrf.SetNumRefs(num_doodad_refs, num_wmo_refs);
     GetSubChunk("FRCM", 4, &mcrf);
   }

@@ -1,6 +1,6 @@
 #include "glview_c.h"
 
-Camera_c GlView_c::camera_(glm::vec3(19487.4f, 53.9951f, 26324.9f));
+Camera_c GlView_c::camera_(glm::vec3(19197.9f, 136.883f, 26131.2f));
 uint32_t GlView_c::indices_;
 
 GlView_c::GlView_c(int32_t width, int32_t height, const char *title)
@@ -43,7 +43,7 @@ void GlView_c::SetLight() {
   GLfloat ambientLight[] = { 0.2f, 0.2f, 0.2f, 0.5f };
   GLfloat diffuseLight[] = { 0.8f, 0.8f, 0.8, 0.5f };
   GLfloat specularLight[] = { 0.5f, 0.5f, 0.5f, 0.2f };
-  GLfloat position[] = { 100.0f, 10000.0f, 0, 1.0f };
+  GLfloat position[] = { -100.0f, 10000.0f, 0, 1.0f };
 
   // Assign created components to GL_LIGHT0
   glLightfv(GL_LIGHT0, GL_AMBIENT, ambientLight);
@@ -71,8 +71,8 @@ void GlView_c::SetCallbacks() {
 
 void GlView_c::SetGlCapabilities() {
   glShadeModel(GL_SMOOTH);
-
-
+  glEnable(GL_COLOR_MATERIAL);
+  //glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
   glClearColor(0, 0, 0.1, 1.0f);
 }
 
@@ -92,18 +92,23 @@ void GlView_c::Render() {
 
   glEnableClientState(GL_VERTEX_ARRAY);
   glEnableClientState(GL_NORMAL_ARRAY);
+  glEnableClientState(GL_COLOR_ARRAY);
+  //glEnableClientState(GL_INDEX_ARRAY);
 
   glDrawElements(GL_TRIANGLES, indices_, GL_UNSIGNED_INT, NULL);
 
   glDisableClientState(GL_VERTEX_ARRAY);
   glDisableClientState(GL_NORMAL_ARRAY);
+  glDisableClientState(GL_COLOR_ARRAY);
+  //glDisableClientState(GL_INDEX_ARRAY);
 
   glutSwapBuffers();
 }
 
 void GlView_c::SetBuffers(const Points_t *vertices,
                           const Points_t *normals,
-                          const Indices32_t *indices) {
+                          const Indices32_t *indices,
+                          const Indices32_t *colors) {
   uint32_t vbo_vtx_id;
   // generate and bind buffer
   glGenBuffersARB(1, &vbo_vtx_id);
@@ -120,11 +125,19 @@ void GlView_c::SetBuffers(const Points_t *vertices,
       normals->data(), GL_STATIC_DRAW_ARB);
   glNormalPointer(GL_FLOAT, 0, NULL);
 
+  uint32_t vbo_col_id;
+  glGenBuffersARB(1, &vbo_col_id);
+  glBindBufferARB(GL_ARRAY_BUFFER_ARB, vbo_col_id);
+  glBufferDataARB(GL_ARRAY_BUFFER_ARB, vertices->size()*sizeof(int),
+        colors->data(), GL_STATIC_DRAW_ARB);
+  glColorPointer(4, GL_UNSIGNED_BYTE, 0, NULL);
+
   uint32_t vbo_idx_id;
   glGenBuffersARB(1, &vbo_idx_id);
   glBindBufferARB(GL_ELEMENT_ARRAY_BUFFER_ARB, vbo_idx_id);
   glBufferDataARB(GL_ELEMENT_ARRAY_BUFFER_ARB, indices->size()*sizeof(uint32_t),
       indices->data(), GL_STATIC_DRAW_ARB);
+  glIndexPointer(GL_UNSIGNED_INT, 0, NULL);
 }
 
 void GlView_c::MouseUpCallback(int32_t x, int32_t y) {
@@ -151,6 +164,12 @@ void GlView_c::KeyboardCallback(uint8_t key, int x, int y) {
       break; }
     case 'd': {
       camera_.Strafe(+speed);
+      break; }
+    case 'q': {
+      camera_.SwimUp(-speed);
+      break; }
+    case 'e': {
+      camera_.SwimUp(+speed);
       break; }
     case 'h': {
       speed = 1.0f;

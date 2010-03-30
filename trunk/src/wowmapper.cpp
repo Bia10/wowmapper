@@ -20,49 +20,26 @@ int main(int argc, char **argv) {
 	Wdt_c wdt(file_buf, size, "World\\maps\\Azeroth\\Azeroth");
 	delete [] file_buf; file_buf = NULL;
 
-	//AdtList_t adt_list;
-
-	/*uint8_t *m2_buf = NULL;
-  int64_t m2_size = mpq_handler.LoadFileByName("Character\\BloodElf\\Female\\BloodElfFemale.M2", &m2_buf);
-  M2_c m2(m2_buf, m2_size);
-
-  uint8_t *skin_buf = NULL;
-  int64_t skin_size = mpq_handler.LoadFileByName("Character\\BloodElf\\Female\\BloodElfFemale00.skin", &skin_buf);
-  Skin_c skin(skin_buf, skin_size);
-
-  Points_t vertices, normals;
-  m2.get_vertex_buffer(&vertices);
-  m2.get_normal_buffer(&normals);
-  Indices16_t indices;
-  skin.get_index_buffer(&indices);
-
-  std::cout << indices.size() << std::endl;*/
-
-	/*for (AdtNames_t::const_iterator name = wdt.adt_names().begin();
-	     name != wdt.adt_names().end();
-	     ++name) {
-	  file_buf = NULL;
-	  size = mpq_handler.LoadFileByName(name->c_str(), &file_buf);
-	  Adt_c adt(file_buf, size, mpq_handler);
-	}*/
-
 	AdtNames_t::const_iterator name = wdt.adt_names().begin();
 
 	Points_t vertices, normals;
-	Indices32_t indices;
+	Indices32_t indices, colors;
 
-	for (int i = 0; i < 276; i++) { ++name; }
+	for (int i = 0; i < 540; i++) { ++name; }
 
+	clock_t start = clock();
 
 
 	for (int i = 0; i < 128; i++) {
 	  size = mpq_handler.LoadFileByName(name->c_str(), &file_buf);
+	  std::cout << i << " " << name->c_str() << std::endl;
 	  Adt_c adt(file_buf, size, mpq_handler);
+
+	  InsertIndices(adt.indices(), vertices.size(), &indices);
 
 	  vertices.insert(vertices.end(), adt.vertices().begin(), adt.vertices().end());
 	  normals.insert(normals.end(), adt.normals().begin(), adt.normals().end());
-
-	  InsertIndices(adt.indices(), vertices.size()-adt.vertices().size(), &indices);
+	  colors.insert(colors.end(), adt.colors().begin(), adt.colors().end());
 
 	  delete [] file_buf;
 	  file_buf = NULL;
@@ -70,11 +47,14 @@ int main(int argc, char **argv) {
 	  ++name;
 	}
 
-	std::cout << "Triangles visible: " << indices.size() << std::endl;
+	std::cout << float(clock()-start) / CLOCKS_PER_SEC << " sec" << std::endl;
+
+	std::cout << "Triangles visible: " << indices.size()/3 << std::endl;
+	std::cout << vertices.front().x << " " << vertices.front().y << " " << vertices.front().z << std::endl;
 
   GlView_c gl_view(800,  600, "glview");
   gl_view.Initialize(indices.size());
-  gl_view.SetBuffers(&vertices, &normals, &indices);
+  gl_view.SetBuffers(&vertices, &normals, &indices, &colors);
   vertices.clear(); normals.clear(); indices.clear();
 
   gl_view.Go();

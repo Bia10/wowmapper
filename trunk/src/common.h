@@ -55,6 +55,6 @@ static void InsertIndices(const std::vector<T> &ins, T offset, std::vector<T> *o
 #define UNIT 2.083333333f // 100.0f / (3.0f * 16.0f);
 
 struct BlockInfo_s {
-  uint32_t num;
-  uint32_t offset;
+  int32_t num;
+  int32_t offset;
 };

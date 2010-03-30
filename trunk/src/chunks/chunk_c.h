@@ -9,6 +9,8 @@ typedef std::vector<uint8_t> Buffer_t;
 static const uint32_t CHUNK_SIZE_OFFSET = 0x4;
 static const uint32_t CHUNK_DATA_OFFSET = 0x8;
 
+class MpqHandler_c;
+
 /*! \brief Base chunk class for all chunked wow data. */
 class Chunk_c {
  public:
@@ -36,7 +38,7 @@ class Chunk_c {
 	 *  \return Returns a reference to the data. */
 	template<typename T> const T& GetField(uint32_t offset) const;
 	template<typename T> void CopyDataBlock(Buffer_t &buffer, std::vector<T> *dest);
-	template<typename T> void CopyDataBlock(Buffer_t &buffer, uint32_t num_elements, std::vector<T> *dest);
+	template<typename T> void CopyDataBlock(Buffer_t &buffer, uint32_t offset, uint32_t num_elements, std::vector<T> *dest);
 	virtual void Initialize() {}
 
 	Chunk_c *parent_;  //<! Parent chunk
@@ -68,9 +70,13 @@ void Chunk_c::CopyDataBlock(Buffer_t &buffer, std::vector<T> *dest) {
 }
 
 template<typename T>
-void Chunk_c::CopyDataBlock(Buffer_t &buffer, uint32_t num_elements, std::vector<T> *dest) {
+void Chunk_c::CopyDataBlock(Buffer_t &buffer,
+                            uint32_t offset,
+                            uint32_t num_elements,
+                            std::vector<T> *dest) {
   uint8_t *data = reinterpret_cast<uint8_t*>(dest->data());
   std::raw_storage_iterator<uint8_t*, uint8_t> raw_iter(data);
 
-  std::copy(buffer.begin(), buffer.begin()+(num_elements*sizeof(T)), raw_iter);
+  std::copy(buffer.begin()+offset,
+      buffer.begin()+offset+(num_elements*sizeof(T)), raw_iter);
 }
