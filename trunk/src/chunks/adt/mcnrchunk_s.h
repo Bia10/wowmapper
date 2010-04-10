@@ -23,7 +23,7 @@ struct McnrChunk_s : public Chunk_c {
   }
 
  protected:
-  virtual void Initialize() {
+  virtual void LateInit() {
     Normals_t temp_normals(435);
     CopyDataBlock(buffer_, &temp_normals);
     std::transform(temp_normals.begin(), temp_normals.end(),

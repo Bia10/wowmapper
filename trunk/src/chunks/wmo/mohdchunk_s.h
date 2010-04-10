@@ -13,7 +13,7 @@ struct MohdChunk_s : public Chunk_c {
   MohdChunk_s(Chunk_c *parent) : Chunk_c(parent) { }
 
  protected:
-  virtual void Initialize() {
+  virtual void LateInit() {
     num_groups = GetField<uint32_t>(0x04);
     num_models =  GetField<uint32_t>(0x10);
     num_doodads = GetField<uint32_t>(0x14);

@@ -42,13 +42,13 @@ struct Mh2oChunk_s : public Chunk_c {
     : Chunk_c(parent), header(256), info(256), heights(256) { }
 
  protected:
-  virtual void Initialize() {
+  virtual void LateInit() {
     CopyDataBlock(buffer_, 0, 256, &header);
 
     for (int i = 0; i < 256; i++) {
       if (header[i].layer_count) {
         info[i] = GetField<Mh2oInfo_s>(header[i].info_offset);
-        if ((info[i].type & 1) != 1) { return; }
+        if ((info[i].type & 1) != 1) { continue; }
 
         // assign height properties
         heights[i].mask = GetField<uint64_t>(header[i].render_mask_offset);
@@ -57,7 +57,7 @@ struct Mh2oChunk_s : public Chunk_c {
         heights[i].x = info[i].x_offset;
         heights[i].y = info[i].y_offset;
 
-        // a 3x3 grid is made up from 4x4 heights (their corners)
+        // a 3x3 grid is made up of 4x4 heights (their corners)
         uint32_t num_h = (heights[i].w+1)*(heights[i].h+1);
 
         // get heights from heightmap or from height level

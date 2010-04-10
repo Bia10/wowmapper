@@ -19,7 +19,7 @@ struct McrfChunk_s : public Chunk_c {
   }
 
  protected:
-  virtual void Initialize() {
+  virtual void LateInit() {
     Indices32_t offsets(num_doodad_refs_ + num_wmo_refs_);
     CopyDataBlock(buffer_, &offsets);
 

@@ -16,7 +16,7 @@ typedef std::vector<M2Vertex_s> M2Vertices_t;
 /*! \brief M2 file handler. */
 class M2_c : public Chunk_c {
  public:
-  M2_c(const uint8_t *buffer, uint32_t length);
+  M2_c(Buffer_t *buffer);
 
   void GetVertices(Points_t *buffer) const;
   void GetNormals(Points_t *buffer) const;

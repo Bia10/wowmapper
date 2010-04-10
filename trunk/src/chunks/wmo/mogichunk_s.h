@@ -17,7 +17,7 @@ struct MogiChunk_s : public Chunk_c {
   MogiChunk_s(Chunk_c *parent) : Chunk_c(parent) { }
 
  protected:
-  virtual void Initialize() {
+  virtual void LateInit() {
     group_info.resize(buffer_.size()/sizeof(GroupInfo_s));
     CopyDataBlock(buffer_, &group_info);
   }

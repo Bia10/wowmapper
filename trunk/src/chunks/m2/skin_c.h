@@ -4,7 +4,7 @@
 
 class Skin_c : Chunk_c {
  public:
-  Skin_c(const uint8_t *buffer, uint32_t length);
+  Skin_c(Buffer_t *buffer);
 
   void GetIndices(Indices32_t *buffer) const;
 

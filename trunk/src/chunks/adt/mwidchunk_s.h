@@ -10,7 +10,7 @@ struct MwidChunk_s : public Chunk_c {
   MwidChunk_s(Chunk_c *parent) : Chunk_c(parent) { }
 
  protected:
-  virtual void Initialize() {
+  virtual void LateInit() {
     name_offsets.resize(buffer_.size()/sizeof(uint32_t));
     CopyDataBlock(buffer_, &name_offsets);
   }

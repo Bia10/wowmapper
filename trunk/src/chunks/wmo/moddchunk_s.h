@@ -18,7 +18,7 @@ struct ModdChunk_s : public Chunk_c {
   ModdChunk_s(Chunk_c *parent) : Chunk_c(parent) { }
 
  protected:
-  virtual void Initialize() {
+  virtual void LateInit() {
     doodad_info.resize(buffer_.size()/sizeof(DoodadInfo_s));
     CopyDataBlock(buffer_, &doodad_info);
   }

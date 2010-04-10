@@ -17,7 +17,7 @@ struct McinChunk_s : public Chunk_c {
 	}
 
  protected:
-	virtual void Initialize() {
+	virtual void LateInit() {
 	  CopyDataBlock(buffer_, &mcnk_info);
 
 	  // get mcnks by mcnk info

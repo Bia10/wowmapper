@@ -2,24 +2,13 @@
 
 Chunk_c::Chunk_c(Chunk_c *parent) : parent_(parent) {}
 
-Chunk_c::Chunk_c(const uint8_t *buffer, uint32_t length)
+Chunk_c::Chunk_c(Buffer_t *buffer)
 		: parent_(NULL) {
-	AssignBuffer(buffer, length);
+  buffer_.swap(*buffer);
 }
 
 Chunk_c::~Chunk_c() {
 	parent_ = NULL;
-}
-
-bool Chunk_c::AssignBuffer(const uint8_t *buffer, uint32_t length) {
-	try {
-		buffer_.assign(buffer, buffer+length);
-		return true;
-	} catch (std::exception &e) {
-		std::cout << __FILE__ << " " << e.what() << std::endl;
-	}
-
-	return false;
 }
 
 size_t Chunk_c::GetChunkSize(Buffer_t::const_iterator &first) const {
@@ -39,12 +28,14 @@ bool Chunk_c::GetSubChunk(const char *id,
 			found += CHUNK_DATA_OFFSET;
 			last = found + size;
 
+
+
 			subChunk->buffer_.assign(found, last);
-			subChunk->Initialize();
+			subChunk->LateInit();
 			subChunk->buffer_.clear();
 			return true;
 		} catch (std::exception &e) {
-			std::cout << __FILE__ << " " << e.what() << std::endl;
+		  std::cout << __LINE__ << " " << __FILE__ << ": " << e.what() << std::endl;
 		}
 	}
 
@@ -59,12 +50,12 @@ bool Chunk_c::GetSubChunk(uint32_t offset, Chunk_c *subChunk) const {
 		if ((offset + CHUNK_DATA_OFFSET + size) <= buffer_.size()) {
 			Buffer_t::const_iterator first = buffer_.begin()+offset+CHUNK_DATA_OFFSET;
 			subChunk->buffer_.assign(first, first+size);
-			subChunk->Initialize();
+			subChunk->LateInit();
 			subChunk->buffer_.clear();
 			return true;
 		}
 	} catch (std::exception &e) {
-		std::cout << __FILE__ << " " << e.what() << std::endl;
+	  std::cout << __LINE__ << " " << __FILE__ << ": " << e.what() << std::endl;
 	}
 
 	return false;

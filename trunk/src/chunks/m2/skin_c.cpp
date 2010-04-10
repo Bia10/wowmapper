@@ -1,7 +1,6 @@
 #include "skin_c.h"
 
-Skin_c::Skin_c(const uint8_t *buffer, uint32_t length)
-    : Chunk_c(buffer, length) {
+Skin_c::Skin_c(Buffer_t *buffer) : Chunk_c(buffer) {
   // retrieve information blocks
   BlockInfo_s indices = GetField<BlockInfo_s>(0x04);
   indices_.resize(indices.num);
@@ -28,6 +27,8 @@ void Skin_c::GetIndices(Indices32_t *buffer) const {
       buffer->push_back(indices_.at(*idx));
     }
   } catch(std::exception &e) {
+    std::cout << __LINE__ << " " << __FILE__ << ": " << e.what() << std::endl;
+    buffer->clear(); // clear buffer if anything went wrong
     return;
   }
 }
