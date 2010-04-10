@@ -1,104 +1,113 @@
 #include "mpqhandler_c.h"
-#include <iostream>
-#include <libmpq/mpq-internal.h>
-#include <string.h>
 
-MpqHandler_c::MpqHandler_c(const char *defaultDir)
-    : default_dir_("./"),
-      mpq_arc_(NULL) {
+MpqHandler_c::MpqHandler_c(const char *searchDir)
+    : search_dir_(searchDir) {
+  GetMpqs();
 }
 
 MpqHandler_c::~MpqHandler_c() {
-  libmpq__archive_close(mpq_arc_);
+  for (MpqArchives_t::iterator arc = mpq_arcs_.begin();
+       arc != mpq_arcs_.end();
+       ++arc) {
+    libmpq__archive_close(*arc);
+  }
 }
 
-void MpqHandler_c::SetDefaultDirectory(const char *directory) {
-  default_dir_ = std::string(directory);
-}
-
-int32_t MpqHandler_c::OpenFile(const char *filename) {
-  /* construct path from default directory and filename */
-  std::string mpq_path(default_dir_);
-  mpq_path.append(filename);
+int32_t MpqHandler_c::OpenMpq(const char *filename) {
+  // construct path from default directory and filename
+  std::string mpq_path(search_dir_);
+  mpq_path.append(std::string("/") + filename);
 
   int32_t err = 0;
   uint8_t *buf = NULL;
+  mpq_archive_s *mpq_arc = NULL;
 
   try {
-    /* open mpq archive */
-    err = libmpq__archive_open(&mpq_arc_, mpq_path.c_str(), -1);
-    if (err != LIBMPQ_SUCCESS)
+    // open mpq archive
+    err = libmpq__archive_open(&mpq_arc, mpq_path.c_str(), -1);
+    if (err != LIBMPQ_SUCCESS) {
       throw(std::string("libmpq__archive_open failed"));
+    }
 
-    /* get file number of the list file which contains all names in the archive */
+    // get file number of the list file which contains all names in the archive
     uint32_t file_num = 0;
-    err = libmpq__file_number(mpq_arc_, LIBMPQ_LISTFILE_NAME, &file_num);
-    if (err != LIBMPQ_SUCCESS)
+    err = libmpq__file_number(mpq_arc, LIBMPQ_LISTFILE_NAME, &file_num);
+    if (err != LIBMPQ_SUCCESS) {
       throw(std::string("libmpq__file_number failed"));
+    }
 
-    /* read file from archive...get file size and reserve space */
+    //read file from archive...get file size and reserve space
     int64_t filesize;
-    err = libmpq__file_unpacked_size(mpq_arc_, file_num, &filesize);
-    if(err != LIBMPQ_SUCCESS)
+    err = libmpq__file_unpacked_size(mpq_arc, file_num, &filesize);
+    if(err != LIBMPQ_SUCCESS) {
       throw(std::string("libmpq__file_unpacked_size failed"));
+    }
 
-    /* read file from archive to buffer*/
+    // read file from archive to buffer
     buf = new uint8_t[filesize];
-    err = libmpq__file_read(mpq_arc_, file_num, buf, filesize, NULL);
-    if (err != LIBMPQ_SUCCESS)
+    err = libmpq__file_read(mpq_arc, file_num, buf, filesize, NULL);
+    if (err != LIBMPQ_SUCCESS) {
       throw(std::string("libmpq__file_read failed"));
+    }
 
   } catch(std::string err_msg) {
     std::cout << err_msg << " (" << err << ")" << std::endl;
 
     delete [] buf;
-    libmpq__archive_close(mpq_arc_);
+    libmpq__archive_close(mpq_arc);
 
     return err;
   }
 
-  /* get all filenames from listfile */
-  for(char *arc_filename = strtok((char*)buf, "\r\n");
-      arc_filename != NULL;
-      arc_filename = strtok(NULL, "\r\n")) {
-    mpq_file_list_.push_back(arc_filename);
+  // get all filenames (lowercase) from listfile
+  for(char *wow_filename = strtok((char*)buf, "\r\n");
+      wow_filename != NULL;
+      wow_filename = strtok(NULL, "\r\n")) {
+    wow_file_map_.insert(WowFile_t(ToLower(wow_filename), mpq_arc));
   }
+
+  mpq_arcs_.push_back(mpq_arc);
 
   delete [] buf;
 
   return err;
 }
 
-int32_t MpqHandler_c::GetFileListByFilter(const char *filter,
-										  MpqFileList_t *outList) const {
-  int32_t num_files = 0;
-  /* insert into outList if we find our filter in the string */
-  for(MpqFileList_t::const_iterator mpq_file = mpq_file_list_.begin();
-      mpq_file != mpq_file_list_.end();
-      ++mpq_file) {
-    if (mpq_file->find(filter, 0) != std::string::npos) {
-      outList->push_back(*mpq_file);
-      num_files++;
+void MpqHandler_c::GetMpqs() {
+  DIR *dir = opendir(search_dir_.c_str());
+
+  // list everything what's in the search dir and open mpq if we find one
+  for (dirent *dir_entry = readdir(dir); dir_entry; dir_entry = readdir(dir)) {
+    std::string cur_name(dir_entry->d_name);
+    std::transform(cur_name.begin(), cur_name.end(), cur_name.begin(), tolower);
+
+    // found a mpq file and load its file list
+    if (cur_name.find(".mpq", 0) != std::string::npos) {
+      std::cout << "Open MPQ: " << cur_name << std::endl;
+      OpenMpq(dir_entry->d_name);
     }
   }
 
-  return num_files;
+  std::cout << "Files in MPQs available: " << wow_file_map_.size() << std::endl;
+
+  closedir(dir);
 }
 
-int64_t MpqHandler_c::LoadFileByName(const char *filename,
-                                     uint8_t **buffer) const {
-  int64_t unpacked_size = 0;
-  int64_t written_bytes = 0;
+bool MpqHandler_c::LoadFile(const char *filename, Buffer_t *buffer) const {
+  int64_t unpacked = 0;
+  int64_t bytes = 0;
   uint32_t file_num = 0;
 
-  libmpq__file_number(mpq_arc_, filename, &file_num);
-  libmpq__file_unpacked_size(mpq_arc_, file_num, &unpacked_size);
+  WowFileMap_t::const_iterator wow_file = wow_file_map_.find(ToLower(filename));
 
-  /* create buffer if it's null-pointer (NULL) */
-  if (*buffer == NULL)
-    *buffer = new uint8_t[unpacked_size];
+  if (wow_file != wow_file_map_.end()) {
+    mpq_archive_s *mpq_arc = wow_file->second;
+    libmpq__file_number(mpq_arc, filename, &file_num);
+    libmpq__file_unpacked_size(mpq_arc, file_num, &unpacked);
 
-  libmpq__file_read(mpq_arc_, file_num, *buffer, unpacked_size, &written_bytes);
+    buffer->resize(unpacked);
+    libmpq__file_read(mpq_arc, file_num, buffer->data(), unpacked, &bytes);
+  }
 
-  return written_bytes;
+  return bytes > 0;
 }

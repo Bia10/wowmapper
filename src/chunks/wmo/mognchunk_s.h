@@ -8,7 +8,7 @@ struct MognChunk_s : public Chunk_c {
   MognChunk_s(Chunk_c *parent) : Chunk_c(parent) { }
 
  protected:
-  virtual void Initialize() {
+  virtual void LateInit() {
     group_names.assign(buffer_.begin(), buffer_.end());
   }
 };

@@ -7,14 +7,17 @@
 #include <list>
 #include <algorithm>
 #include <string>
-#include <stdint.h>
 #include <iostream>
 #include <exception>
 #include <memory>
-#include <time.h>
 #include <iterator>
 #include <bitset>
 #include <sstream>
+
+#include <dirent.h>
+#include <string.h>
+#include <stdint.h>
+#include <time.h>
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -50,6 +53,12 @@ static void InsertIndices(const std::vector<T> &ins, T offset, std::vector<T> *o
       ins_cpy.begin(), std::plus<T>());
 
   out->insert(out->end(), ins_cpy.begin(), ins_cpy.end());
+}
+
+static std::string ToLower(const std::string &str) {
+  std::string lower(str);
+  std::transform(lower.begin(), lower.end(), lower.begin(), tolower);
+  return lower;
 }
 
 #define UNIT 2.083333333f // 100.0f / (3.0f * 16.0f);

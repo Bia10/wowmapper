@@ -10,7 +10,7 @@ struct MwmoChunk_s : public Chunk_c {
   MwmoChunk_s(Chunk_c *parent) : Chunk_c(parent) { }
 
  protected:
-  virtual void Initialize() {
+  virtual void LateInit() {
     wmo_names.assign(buffer_.begin(), buffer_.end());
   }
 };

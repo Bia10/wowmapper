@@ -1,5 +1,4 @@
 #include "wdt_c.h"
-#include "../adt/adt_c.h"
 
 Wdt_c::Wdt_c(uint8_t *buffer, int64_t size, const char *name)
     : ChunkReader_c(buffer, size),

@@ -1,26 +1,85 @@
 #include "adt_c.h"
 
-Adt_c::Adt_c(const uint8_t *buffer, uint32_t length, MpqHandler_c &mpq_h)
-    : Chunk_c(buffer, length),
-      mhdr_(this), mmdx_(this), mmid_(this), mwmo_(this),
-      mwid_(this), mddf_(this), modf_(this), mh2o_(this) {
-  GetSubChunk("RDHM", 4, &mhdr_);
-  GetSubChunk("XDMM", 4, &mmdx_);
-  GetSubChunk("DIMM", 4, &mmid_);
-  GetSubChunk("OMWM", 4, &mwmo_);
-  GetSubChunk("DIWM", 4, &mwid_);
-  GetSubChunk("FDDM", 4, &mddf_);
-  GetSubChunk("FDOM", 4, &modf_);
-  GetSubChunk("O2HM", 4, &mh2o_);
+Indices32_t Adt_c::obj_uids_;
+
+Adt_c::Adt_c(Buffer_t *buffer, MpqHandler_c &mpq_h)
+    : Chunk_c(buffer), mhdr_(this) {
+  GetSubChunk(0x0c, &mhdr_); //GetSubChunk("RDHM", 4, &mhdr_);
 
   GenerateTerrain();
-  InsertDoodads(mpq_h);
+  GenerateWater();
+  InsertDoodads(mpq_h, true);
+
+  ModfChunk_s &modf = mhdr_.modf;
+  MwidChunk_s &mwid = mhdr_.mwid;
+  MwmoChunk_s &mwmo = mhdr_.mwmo;
+
+  for (ModfChunk_s::WmoInfo_t::iterator wmo_info = modf.wmo_info.begin();
+       wmo_info != modf.wmo_info.end();
+       ++wmo_info) {
+    // check if obj with unique id has already been placed
+    Indices32_t::iterator found;
+    found = std::find(obj_uids_.begin(), obj_uids_.end(), wmo_info->uid);
+    if (found != obj_uids_.end()) { continue; }
+    obj_uids_.push_back(wmo_info->uid);
+
+    // get wmo filename
+    std::string filename(mwmo.wmo_names.c_str()+mwid.name_offsets.at(wmo_info->id));
+
+    Buffer_t wmo_buf;
+    mpq_h.LoadFile(filename.c_str(), &wmo_buf);
+    std::cout << "Load WMO: " << filename << " " << wmo_buf.size()/1024 << " kb" << std::endl;
+    Wmo_c wmo(&wmo_buf, filename, mpq_h);
+
+    InsertIndices(wmo.indices(), vertices_.size(), &indices_);
+
+    Points_t vertices = wmo.vertices();
+    TransformVertices(wmo_info->position, wmo_info->orientation, 1.0f, &vertices);
+    vertices_.insert(vertices_.end(), vertices.begin(), vertices.end());
+
+    normals_.insert(normals_.end(), wmo.normals().begin(), wmo.normals().end());
+    colors_.insert(colors_.end(), wmo.colors().begin(), wmo.colors().end());
+  }
+}
+
+Adt_c::~Adt_c() {
+  for (M2Map_t::iterator dd = m2_map_.begin(); dd != m2_map_.end(); ++dd) {
+    delete dd->second;
+  }
+}
+
+void Adt_c::GenerateTerrain() {
+  vertices_.reserve(256*145);
+  normals_.reserve(256*145);
+  indices_.reserve(256*768);
+  colors_.insert(colors_.end(), 256*145, 0xff127e14); // ABGR
+
+  for (McinChunk_s::McnkChunks_t::iterator mcnk = mhdr_.mcin.mcnks.begin();
+       mcnk != mhdr_.mcin.mcnks.end();
+       ++mcnk) {
+    Points_t vertices, normals;
+    Indices32_t indices;
+    mcnk->mcvt.GetVertices(&vertices);
+    mcnk->mcnr.GetNormals(&normals);
+    mcnk->mcvt.GetIndices(&indices);
+
+    InsertIndices(indices, vertices_.size(), &indices_);
+
+    // insert all vertices, normals, indices into their bigger arrays
+    vertices_.insert(vertices_.end(), vertices.begin(), vertices.end());
+    normals_.insert(normals_.end(), normals.begin(), normals.end());
+  }
+}
+
+void Adt_c::GenerateWater() {
+  Mh2oChunk_s &mh2o = mhdr_.mh2o;
+  if (mh2o.heights.size() <= 0) return;
 
   for (int tile_y = 0; tile_y < 16; tile_y++) {
     for (int tile_x = 0; tile_x < 16; tile_x++) {
       int cur_tile = tile_y*16+tile_x;
-      if (mh2o_.heights[cur_tile].val.size()) {
-        Mh2oChunk_s::Mh2oHeights_s &heightmap = mh2o_.heights[cur_tile];
+      if (mh2o.heights[cur_tile].val.size()) {
+        Mh2oChunk_s::Mh2oHeights_s &heightmap = mh2o.heights[cur_tile];
         glm::vec3 &pos = mhdr_.mcin.mcnks[cur_tile].position;
 
         int hw = heightmap.w+1; // heights width (max. 9)
@@ -62,6 +121,7 @@ Adt_c::Adt_c(const uint8_t *buffer, uint32_t length, MpqHandler_c &mpq_h)
             }
           }
         }
+
         InsertIndices(indices, vertices_.size(), &indices_);
         vertices_.insert(vertices_.end(), vertices.begin(), vertices.end());
         normals_.insert(normals_.end(), normals.begin(), normals.end());
@@ -71,36 +131,11 @@ Adt_c::Adt_c(const uint8_t *buffer, uint32_t length, MpqHandler_c &mpq_h)
   }
 }
 
-Adt_c::~Adt_c() {
-  for (DoodadMap_t::iterator dd = doodads_.begin(); dd != doodads_.end(); ++dd) {
-    delete dd->second;
-  }
-}
+void Adt_c::InsertDoodads(MpqHandler_c &mpq_h, bool useCollisionModel) {
+  MddfChunk_s &mddf = mhdr_.mddf;
+  MmdxChunk_s &mmdx = mhdr_.mmdx;
+  MmidChunk_s &mmid = mhdr_.mmid;
 
-void Adt_c::GenerateTerrain() {
-  vertices_.reserve(256*145);
-  normals_.reserve(256*145);
-  indices_.reserve(256*768);
-  colors_.insert(colors_.end(), 256*145, 0xff127e14); // ABGR
-
-  for (McinChunk_s::McnkChunks_t::iterator mcnk = mhdr_.mcin.mcnks.begin();
-       mcnk != mhdr_.mcin.mcnks.end();
-       ++mcnk) {
-    Points_t vertices, normals;
-    Indices32_t indices;
-    mcnk->mcvt.GetVertices(&vertices);
-    mcnk->mcnr.GetNormals(&normals);
-    mcnk->mcvt.GetIndices(&indices);
-
-    InsertIndices(indices, vertices_.size(), &indices_);
-
-    // insert all vertices, normals, indices into their bigger arrays
-    vertices_.insert(vertices_.end(), vertices.begin(), vertices.end());
-    normals_.insert(normals_.end(), normals.begin(), normals.end());
-  }
-}
-
-void Adt_c::InsertDoodads(MpqHandler_c &mpq_h) {
   for (McinChunk_s::McnkChunks_t::iterator mcnk = mhdr_.mcin.mcnks.begin();
        mcnk != mhdr_.mcin.mcnks.end();
        ++mcnk) {
@@ -109,39 +144,67 @@ void Adt_c::InsertDoodads(MpqHandler_c &mpq_h) {
     for (Indices32_t::iterator offset = mcnk->mcrf.doodad_offsets.begin();
          offset != mcnk->mcrf.doodad_offsets.end();
          ++offset) {
-      MddfChunk_s::DoodadInfo_s &info = mddf_.doodad_info.at(*offset);
-      std::string filename(mmdx_.m2_names.c_str() + mmid_.name_offsets.at(info.id));
+      MddfChunk_s::DoodadInfo_s &info = mddf.doodad_info.at(*offset);
+      // check if obj with unique id has already been placed
+      Indices32_t::iterator found;
+      found = std::find(obj_uids_.begin(), obj_uids_.end(), info.uid);
+      if (found != obj_uids_.end()) { continue; }
+      obj_uids_.push_back(info.uid);
 
-      // replace false extension with right one
+      std::string filename(mmdx.m2_names.c_str()+mmid.name_offsets.at(info.id));
+
+      // replace false extensions with right one
       std::string m2_name = filename;
-      m2_name.replace(m2_name.find(".mdx", 0), 4, ".m2");
+      size_t ext_pos = m2_name.rfind(".mdx");
+      if (ext_pos != std::string::npos) { m2_name.replace(ext_pos, 4, ".m2"); }
 
-      // look for already loaded m2 and use them instead of reloading them
-      DoodadMap_t::iterator found = doodads_.find(m2_name);
-      if(found != doodads_.end()) {
-        InsertBoundingTriangles(*(*found).second, info);
-        continue;
+      // use collision (bounding volume) models or not
+      if (useCollisionModel) {
+        // look for already loaded m2 and use them instead of reloading them
+        M2Map_t::iterator found = m2_map_.find(m2_name);
+        if (found != m2_map_.end()) {
+          InsertBoundingTriangles(*(*found).second, info);
+        } else {
+          // load m2 model file
+          Buffer_t m2_buf;
+          mpq_h.LoadFile(m2_name.c_str(), &m2_buf);
+
+          // create new entry in map
+          M2_c *m2 = new M2_c(&m2_buf);
+          m2_map_.insert(M2Pair_t(m2_name, m2));
+
+          // insert triangles
+          InsertBoundingTriangles(*m2, info);
+        }
+      } else {
+        // look for already loaded m2 and use them instead of reloading them
+        M2SkinMap_t::iterator found = m2skin_map_.find(m2_name);
+        if (found != m2skin_map_.end()) {
+          M2Skin_s &m2skin = found->second;
+          InsertVisibleTriangles(*m2skin.m2, *m2skin.skin, info);
+        } else {
+          // load m2 because we don't have it
+          Buffer_t m2skin_buf;
+          mpq_h.LoadFile(m2_name.c_str(), &m2skin_buf);
+          M2_c *m2 = new M2_c(&m2skin_buf);
+
+          // construct skin name
+          std::string skin_name = m2_name;
+          ext_pos = skin_name.rfind(".m2");
+          if (ext_pos != std::string::npos) {
+            skin_name.replace(ext_pos, 3, "00.skin");
+          }
+
+          // load skin and ultimately insert it into the map with the m2
+          mpq_h.LoadFile(skin_name.c_str(), &m2skin_buf);
+          Skin_c *skin = new Skin_c(&m2skin_buf);
+
+          M2Skin_s m2skin = {m2, skin};
+          m2skin_map_.insert(M2SkinPair_t(m2_name, m2skin));
+
+          InsertVisibleTriangles(*m2, *skin, info);
+        }
       }
-
-      // load m2 model file
-      uint8_t *m2_buf = NULL;
-      int64_t m2_size = mpq_h.LoadFileByName(m2_name.c_str(), &m2_buf);
-      std::cout << "Load M2: " << m2_name << std::endl;
-
-      M2_c *m2 = new M2_c(m2_buf, m2_size);
-      doodads_.insert(DoodadPair_t(m2_name, m2));
-
-      //InsertBoundingTriangles(*m2, info);
-
-      // load m2 skin file
-      /*std::string skin_name = filename;
-      skin_name.replace(skin_name.find(".mdx", 0), 4, "00.skin");
-      uint8_t *skin_buf = NULL;
-      int64_t skin_size = mpq_h.LoadFileByName(skin_name.c_str(), &skin_buf);
-      std::cout << "Load Skin: " << skin_name << std::endl;
-      Skin_c skin(skin_buf, skin_size);
-
-      InsertVisibleTriangles(m2, skin, info)*/
     }
   }
 }

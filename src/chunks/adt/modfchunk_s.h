@@ -23,7 +23,7 @@ struct ModfChunk_s : public Chunk_c {
   ModfChunk_s(Chunk_c *parent) : Chunk_c(parent) {}
 
  protected:
-  virtual void Initialize() {
+  virtual void LateInit() {
     wmo_info.resize(buffer_.size()/sizeof(WmoInfo_s));
     CopyDataBlock(buffer_, &wmo_info);
   }

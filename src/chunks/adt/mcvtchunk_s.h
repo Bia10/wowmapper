@@ -67,7 +67,7 @@ struct McvtChunk_s : public Chunk_c {
   }
 
  protected:
-  virtual void Initialize() { CopyDataBlock(buffer_, &heights); }
+  virtual void LateInit() { CopyDataBlock(buffer_, &heights); }
 
  private:
   glm::vec3 position_;

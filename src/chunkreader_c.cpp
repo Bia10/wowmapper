@@ -104,7 +104,7 @@ size_t ChunkReader_c::GetChunkDataSize(size_t chunkIndex) const {
   try {
     chunk_size = &raw_buffer_.at(chunkIndex + CHUNK_SIZE_OFFSET);
   } catch (std::exception &e) {
-    std::cout << e.what() << std::endl;
+    std::cout << __LINE__ << " " << __FILE__ << ": " << e.what() << std::endl;
     return -1;
   }
 

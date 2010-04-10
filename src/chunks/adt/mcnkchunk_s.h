@@ -23,7 +23,7 @@ struct McnkChunk_s : public Chunk_c {
       : Chunk_c(parent), mcvt(this), mcnr(this), mcrf(this) { }
 
  protected:
-  virtual void Initialize() {
+  virtual void LateInit() {
     flags = GetField<uint32_t>(0x00);           // flags
     index_x = GetField<uint32_t>(0x04);         // index X
     index_y = GetField<uint32_t>(0x08);         // index X
