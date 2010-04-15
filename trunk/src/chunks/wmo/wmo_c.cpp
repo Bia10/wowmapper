@@ -16,8 +16,6 @@ Wmo_c::Wmo_c(Buffer_t *buffer, std::string wmo_name, MpqHandler_c &mpq_h)
 
     Buffer_t subwmo_buf;
     mpq_h.LoadFile(subwmo_name.c_str(), &subwmo_buf);
-    std::cout << subwmo_name << " " << subwmo_buf.size()/1024 << " kb" << std::endl;
-
     SubWmo_c subwmo(&subwmo_buf);
 
     Indices32_t indices(subwmo.indices().begin(), subwmo.indices().end());
