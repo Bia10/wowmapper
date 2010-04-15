@@ -1,6 +1,6 @@
 #include "glview_c.h"
 
-Camera_c GlView_c::camera_(glm::vec3(19197.9f, 136.883f, 26131.2f));
+Camera_c GlView_c::camera_(glm::vec3(2133.33f, 136.883f, 9066.67f));
 uint32_t GlView_c::indices_;
 
 GlView_c::GlView_c(int32_t width, int32_t height, const char *title)
@@ -73,6 +73,8 @@ void GlView_c::SetGlCapabilities() {
   glShadeModel(GL_SMOOTH);
   glEnable(GL_COLOR_MATERIAL);
   //glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+  glEnable(GL_BLEND);
+  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
   glClearColor(0, 0, 0.1, 1.0f);
 }
 

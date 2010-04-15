@@ -2,7 +2,7 @@
 
 #include "../chunk_c.h"
 
-class Skin_c : Chunk_c {
+class Skin_c : public Chunk_c {
  public:
   Skin_c(Buffer_t *buffer);
 

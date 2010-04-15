@@ -76,6 +76,7 @@ int32_t MpqHandler_c::OpenMpq(const char *filename) {
 void MpqHandler_c::GetMpqs() {
   DIR *dir = opendir(search_dir_.c_str());
 
+  Filenames_t mpq_names;
   // list everything what's in the search dir and open mpq if we find one
   for (dirent *dir_entry = readdir(dir); dir_entry; dir_entry = readdir(dir)) {
     std::string cur_name(dir_entry->d_name);
@@ -83,9 +84,17 @@ void MpqHandler_c::GetMpqs() {
 
     // found a mpq file and load its file list
     if (cur_name.find(".mpq", 0) != std::string::npos) {
-      std::cout << "Open MPQ: " << cur_name << std::endl;
-      OpenMpq(dir_entry->d_name);
+      mpq_names.push_back(dir_entry->d_name);
     }
+  }
+
+  std::sort(mpq_names.begin(), mpq_names.end());
+
+  for (Filenames_t::reverse_iterator mpq_name = mpq_names.rbegin();
+       mpq_name != mpq_names.rend();
+       ++mpq_name) {
+    OpenMpq(mpq_name->c_str());
+    std::cout << "Open MPQ: " << *mpq_name << std::endl;
   }
 
   std::cout << "Files in MPQs available: " << wow_file_map_.size() << std::endl;
