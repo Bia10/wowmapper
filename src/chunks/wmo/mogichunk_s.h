@@ -2,6 +2,7 @@
 
 #include "../chunk_c.h"
 
+/*! \brief MOGI: Map Object Group Information. */
 struct MogiChunk_s : public Chunk_c {
   struct GroupInfo_s {
     uint32_t flags;

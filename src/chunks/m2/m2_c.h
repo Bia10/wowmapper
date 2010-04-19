@@ -1,6 +1,7 @@
 #pragma once
 
 #include "skin_c.h"
+#include "../model_c.h"
 
 struct M2Geometry_s {
   glm::vec3 position;
@@ -14,7 +15,7 @@ struct M2Geometry_s {
 typedef std::vector<M2Geometry_s> M2Geometry_t;
 
 /*! \brief M2 file handler. */
-class M2_c : public Chunk_c {
+class M2_c : public Model_c {
  public:
   M2_c(Buffer_t *buffer);
   virtual ~M2_c();

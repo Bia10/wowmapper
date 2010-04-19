@@ -2,6 +2,7 @@
 
 #include "../chunk_c.h"
 
+/*! \brief MODS: Map Object Doodad Sets. */
 struct ModsChunk_s : public Chunk_c {
   struct DoodadSets_s {
     char set_name[20];

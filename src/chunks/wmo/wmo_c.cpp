@@ -1,13 +1,13 @@
 #include "wmo_c.h"
 
 Wmo_c::Wmo_c(Buffer_t *buffer, std::string wmo_name, MpqHandler_c &mpq_h)
-    : Chunk_c(buffer), mohd_(this), mogn_(this),
+    : Model_c(buffer), mohd_(this), mogn_(this),
       mogi_(this), mods_(this), modd_(this) {
-  GetSubChunk("DHOM", 4, &mohd_);
-  GetSubChunk("NGOM", 4, &mogn_);
-  GetSubChunk("IGOM", 4, &mogi_);
-  GetSubChunk("SDOM", 4, &mods_);
-  GetSubChunk("DDOM", 4, &modd_);
+  GetSubChunk("DHOM", &mohd_);
+  GetSubChunk("NGOM", &mogn_);
+  GetSubChunk("IGOM", &mogi_);
+  GetSubChunk("SDOM", &mods_);
+  GetSubChunk("DDOM", &modd_);
 
   // get subwmo triangles
   for (uint32_t i = 0; i < mohd_.num_groups; i++) {
@@ -20,14 +20,12 @@ Wmo_c::Wmo_c(Buffer_t *buffer, std::string wmo_name, MpqHandler_c &mpq_h)
 
     Indices32_t indices(subwmo.indices().begin(), subwmo.indices().end());
     MopyChunk_s::MaterialInfo_t::const_iterator info = subwmo.mopy().mat_info.begin();
-    for (int i = 0; i < indices.size()/3; i++) {
+    for (uint32_t i = 0; i < indices.size()/3; i++, info++) {
       if (info->flags & 0x4) {
-      //if (!(info->id & 0xff)) {
         indices[i*3+0] = 0;
         indices[i*3+1] = 0;
         indices[i*3+2] = 0;
       }
-      info++;
     }
 
     InsertIndices(indices, vertices_.size(), &indices_);

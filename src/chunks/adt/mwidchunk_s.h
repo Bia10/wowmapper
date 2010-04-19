@@ -2,8 +2,7 @@
 
 #include "../chunk_c.h"
 
-/*! \brief MWID chunk.
- *  http://www.madx.dk/wowdev/wiki/index.php?title=ADT/v18#MWID_chunk */
+/*! \brief MWID: Map Chunk WMO Name Offsets. */
 struct MwidChunk_s : public Chunk_c {
   Indices32_t name_offsets;
 

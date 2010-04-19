@@ -2,8 +2,7 @@
 
 #include "../chunk_c.h"
 
-/*! \brief MMDX chunk.
- *  http://www.madx.dk/wowdev/wiki/index.php?title=ADT/v18#MMDX_chunk */
+/*! \brief MMDX: Map Chunk M2 Names. */
 struct MmdxChunk_s : public Chunk_c {
   std::string m2_names;
 

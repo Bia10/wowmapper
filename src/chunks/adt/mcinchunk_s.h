@@ -2,19 +2,16 @@
 
 #include "mcnkchunk_s.h"
 
-/*! \brief MCIN chunk.
- *  http://www.madx.dk/wowdev/wiki/index.php?title=ADT#MCIN_chunk */
+/*! \brief MCIN: Map Chunk Index. Contains 16*16 entries for every map chunk in
+ *         this ADT.
+ *  \remark This struct holds MCNK chunks which contain terrain information. */
 struct McinChunk_s : public Chunk_c {
 	typedef std::vector<McnkChunk_s> McnkChunks_t;
 
 	McnkChunks_t mcnks;
 
-	McinChunk_s(Chunk_c *parent)
-	    : Chunk_c(parent),
-	      mcnks(256, McnkChunk_s(this)),
-	      mcnk_info(256) {
-
-	}
+	McinChunk_s(Chunk_c *parent) : Chunk_c(parent),
+	    mcnks(256, McnkChunk_s(this)), mcnk_info(256) { }
 
  protected:
 	virtual void LateInit() {

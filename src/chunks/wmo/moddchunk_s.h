@@ -2,6 +2,7 @@
 
 #include "../chunk_c.h"
 
+/*! \brief MODD: Map Object Doodad Information. */
 struct ModdChunk_s : public Chunk_c {
   struct DoodadInfo_s {
     uint32_t name_offset;

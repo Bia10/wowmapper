@@ -1,7 +1,5 @@
 #pragma once
 
-#define SAFE_DELETE(p) { delete p; p = NULL; }
-
 #include <map>
 #include <vector>
 #include <list>
@@ -15,6 +13,7 @@
 #include <sstream>
 #include <fstream>
 #include <float.h>
+#include <limits>
 
 #include <dirent.h>
 #include <string.h>
@@ -31,6 +30,7 @@ typedef std::vector<glm::vec3>    Points_t;
 typedef std::vector<glm::vec2>    TexCoords_t;
 typedef std::vector<uint16_t>     Indices16_t;
 typedef std::vector<uint32_t>     Indices32_t;
+typedef std::vector<uint64_t>     Indices64_t;
 
 typedef std::vector<uint8_t>      Buffer_t;
 typedef std::vector<std::string>  Filenames_t;
@@ -39,11 +39,11 @@ typedef std::bitset<8>            BitSet8_t;
 typedef std::bitset<16>           BitSet16_t;
 typedef std::bitset<32>           BitSet32_t;
 
-#define TU 2.083333333f // Tile Units, 100.0f / (3.0f * 16.0f);
+#define TU 2.08333333333333f // Tile Units, 100.0f / (3.0f * 16.0f);
 
 struct BlockInfo_s {
-  int32_t num;
-  int32_t offset;
+  uint32_t num;
+  uint32_t offset;
 };
 
 /*! \brief Bounding box. */
@@ -61,16 +61,13 @@ struct Mesh_s {
   BBox_s bbox;
 };
 
-typedef std::vector<Mesh_s> Meshes_t;
+typedef std::list<Mesh_s> Meshes_t;
 
-
-/* FUNCTIONS */
-/*! \brief Function to swap axes based on wowdev info: X, Z, -Y
- *         Applies to wmo/adt vertices & normals. */
-static glm::vec3 SwapAxes(glm::vec3 &vec) {
-  return glm::vec3(vec.x, vec.z, -vec.y);
-}
-
+/*! \brief Template function used to insert a new set of indices into already
+ *         existing indices, with an offset to make them align properly.
+ *  \param in Indices to add to out.
+ *  \param offset Offset to make them allign to out's indices.
+ *  \param out Indices which will get in added. */
 template<typename T>
 static void InsertIndices(const std::vector<T> &ins, T offset, std::vector<T> *out) {
   std::vector<T> ins_cpy(ins.begin(), ins.end());
@@ -83,6 +80,21 @@ static void InsertIndices(const std::vector<T> &ins, T offset, std::vector<T> *o
   out->insert(out->end(), ins_cpy.begin(), ins_cpy.end());
 }
 
+/*! \brief Used to replace WoWs extensions on files (cause some or wrong). */
+static bool RreplaceWoWExt(const std::string &in, const std::string &old,
+                        const std::string &rep, std::string *out) {
+  size_t last_bslash = in.rfind('\\');  // used to fix a single file: meatwagonhauler!
+  size_t pos = in.rfind(old);
+  if (last_bslash < pos && pos != std::string::npos) {
+    *out = in;
+    out->replace(pos, old.length(), rep);
+    return true;
+  } else {
+    return false;
+  }
+}
+
+/*! \brief Returns a string of lower characters. */
 static std::string ToLower(const std::string &str) {
   std::string lower(str);
   std::transform(lower.begin(), lower.end(), lower.begin(), tolower);
@@ -94,10 +106,8 @@ static std::string ToLower(const std::string &str) {
  *  \param rot Rotation.
  *  \param scale Scale.
  *  \param vertices Vertices to be transformed. */
-static void TransWoWToRH(const glm::vec3 &pos,
-                         const glm::vec3 &rot,
-                         float scale,
-                         Points_t *vertices) {
+static void TransWoWToRH(const glm::vec3 &pos, const glm::vec3 &rot,
+                         float scale, Points_t *vertices) {
   // rotation
   glm::mat4 rot_mtx;
   rot_mtx = glm::rotate(rot_mtx, rot.y-90, glm::vec3(0, 1, 0));
@@ -113,6 +123,6 @@ static void TransWoWToRH(const glm::vec3 &pos,
        ++vtx) {
     glm::vec4 vtx4(*vtx, 0);
     vtx4 = scale * rot_mtx * vtx4;
-    *vtx = glm::vec3(vtx4) + pos;
+    *vtx = glm::vec3(vtx4) + transl;
   }
 }

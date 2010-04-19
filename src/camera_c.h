@@ -13,7 +13,7 @@ class Camera_c {
   void SwimUp(float speed);
 
   const glm::vec3& position() const { return position_; }
-  const glm::vec3& lookat() const { return position_+direction_; }
+  glm::vec3 lookat() const { return position_+direction_; }
   const glm::vec3& direction() const { return direction_; }
 
  private:

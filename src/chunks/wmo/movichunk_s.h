@@ -2,6 +2,7 @@
 
 #include "../chunk_c.h"
 
+/*! \brief MOVI: Map Object Vertex Indices. */
 struct MoviChunk_s : public Chunk_c {
   Indices16_t indices;
 

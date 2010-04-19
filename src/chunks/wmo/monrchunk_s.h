@@ -2,6 +2,7 @@
 
 #include "../chunk_c.h"
 
+/*! \brief MONR: Map Object Normals. */
 struct MonrChunk_s : public Chunk_c {
   Points_t normals;
 

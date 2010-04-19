@@ -4,8 +4,8 @@
 #include "mcnrchunk_s.h"
 #include "mcrfchunk_s.h"
 
-/*! \brief MCNK chunk.
- *  \url http://www.madx.dk/wowdev/wiki/index.php?title=ADT/v18#MCNK_chunk */
+/*! \brief MCNK: Map Chunks.
+ *  \remark Provides terrain indices, vertices and normals. Also*/
 struct McnkChunk_s : public Chunk_c {
   uint32_t flags;
   uint32_t index_x;
@@ -19,14 +19,14 @@ struct McnkChunk_s : public Chunk_c {
   McnrChunk_s mcnr;
   McrfChunk_s mcrf;
 
-  McnkChunk_s(Chunk_c *parent)
-      : Chunk_c(parent), mcvt(this), mcnr(this), mcrf(this) { }
+  McnkChunk_s(Chunk_c *parent) : Chunk_c(parent), mcvt(this),
+      mcnr(this), mcrf(this) { }
 
  protected:
   virtual void LateInit() {
     flags = GetField<uint32_t>(0x00);           // flags
     index_x = GetField<uint32_t>(0x04);         // index X
-    index_y = GetField<uint32_t>(0x08);         // index X
+    index_y = GetField<uint32_t>(0x08);         // index Y
     num_doodad_refs = GetField<uint32_t>(0x10); // number of doodad references
     num_wmo_refs = GetField<uint32_t>(0x38);    // number of wmo references
     area_id = GetField<uint32_t>(0x34);         // area ID
@@ -36,14 +36,13 @@ struct McnkChunk_s : public Chunk_c {
     // initialize vertices, normals and doodad/wmo-references
     mcvt.SetPosition(position);
     mcvt.SetHoles(holes);
-    GetSubChunk("TVCM", 4, &mcvt);
+    GetSubChunk("TVCM", &mcvt);
+    GetSubChunk("RNCM", &mcnr);
 
-    GetSubChunk("RNCM", 4, &mcnr);
-
-    // workaround :p
+    // don't proceed any further if there are no wmos or m2s
     if ((num_doodad_refs + num_wmo_refs) == 0) { return; }
 
     mcrf.SetNumRefs(num_doodad_refs, num_wmo_refs);
-    GetSubChunk("FRCM", 4, &mcrf);
+    GetSubChunk("FRCM", &mcrf);
   }
 };
