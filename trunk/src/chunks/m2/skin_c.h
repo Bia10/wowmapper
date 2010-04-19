@@ -2,6 +2,7 @@
 
 #include "../chunk_c.h"
 
+/*! \brief Skin provides indices for M2 models. */
 class Skin_c : public Chunk_c {
  public:
   Skin_c(Buffer_t *buffer);

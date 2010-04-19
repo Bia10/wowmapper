@@ -3,11 +3,10 @@
 #include "../chunk_c.h"
 
 static float NormalsI8toF(int8_t a) {
-  return a * 0.007874016f; // 1/127.0f
+  return a * 0.007874016f; // a * (1/127)
 }
 
-/*! \brief MCNR chunk.
- *  http://www.madx.dk/wowdev/wiki/index.php?title=ADT/v18#MCNR_sub-chunk */
+/*! \brief MCNR: Map Chunk Normals. */
 struct McnrChunk_s : public Chunk_c {
   std::vector<float> normals;
 
@@ -24,8 +23,10 @@ struct McnrChunk_s : public Chunk_c {
 
  protected:
   virtual void LateInit() {
+    // temporary normals array to hold these stupid 8 bit normals by blizz
     Normals_t temp_normals(435);
     CopyDataBlock(buffer_, &temp_normals);
+    // transform to float normals
     std::transform(temp_normals.begin(), temp_normals.end(),
         normals.begin(), NormalsI8toF);
   }

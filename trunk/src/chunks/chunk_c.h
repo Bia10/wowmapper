@@ -17,12 +17,12 @@ class Chunk_c {
 	/* \brief Create a chunk through a buffer. */
 	Chunk_c(Buffer_t *buffer);
   virtual ~Chunk_c();
-  /* \brief Retrieves a chunk by its chunk ID.
+  /* \brief Retrieves a chunk by its chunk ID (unsafe).
    * \param id Chunk ID
    * \param length Length of ID (usually 4)
    * \param subChunk Pointer to a Chunk_c instance
    * \return Returns false if given ID can't be found, otherwise true. */
-  bool GetSubChunk(const char *id, uint32_t length, Chunk_c *subChunk) const;
+  bool GetSubChunk(const std::string &id, Chunk_c *subChunk) const;
   /* \brief Retrieves a chunk by its buffer offset.
    * \param offset Buffer offset
    * \param subChunk Pointer to a Chunk_c instance
@@ -35,18 +35,19 @@ class Chunk_c {
 	/*! \brief Enables sub chunks to do their data initialization after creation.
 	 *         GetSubChunk is invoked by their parents and LateInit gets called. */
 	virtual void LateInit() {}
-	/*! \brief Returns a data field from the buffer, supports PODs only right now.
+	/*! \brief Returns a data field from the buffer.
 	 *  \param offset Offset to data field.
 	 *  \return Returns a reference to the data. */
 	template<typename T> const T& GetField(uint32_t offset) const;
-	template<typename T> void CopyDataBlock(Buffer_t &buffer, std::vector<T> *dest);
-	template<typename T> void CopyDataBlock(Buffer_t &buffer, uint32_t offset, uint32_t num_elements, std::vector<T> *dest);
+	/* \brief Template function to fill any kind of vector with data directly from the buffer. */
+	template<typename T> void CopyDataBlock(const Buffer_t &buffer, std::vector<T> *dest) const;
+	template<typename T> void CopyDataBlock(const Buffer_t &buffer, uint32_t offset, uint32_t num_elements, std::vector<T> *dest) const;
 
 	Chunk_c *parent_;  //<! Parent chunk
 	Buffer_t buffer_;  //<! Chunk buffer
 
  private:
- 	size_t GetChunkSize(Buffer_t::const_iterator &first) const;
+ 	size_t GetSize(Buffer_t::const_iterator &first) const;
 };
 
 template<typename T>
@@ -54,15 +55,15 @@ const T& Chunk_c::GetField(uint32_t offset) const {
 	try {
 		return *reinterpret_cast<const T*>(&buffer_.at(offset));
 	} catch (std::exception &e) {
-	  std::cout << __LINE__ << " " << __FILE__ << ": " << e.what() << std::endl;
+	  std::cout << __FILE__ << " - GetField: " << e.what() << std::endl;
 	}
 
-	T t;
+	T t; // i know this is dumb/dangerous/whatever, but i like to get a ref here
 	return t;
 }
 
 template<typename T>
-void Chunk_c::CopyDataBlock(Buffer_t &buffer, std::vector<T> *dest) {
+void Chunk_c::CopyDataBlock(const Buffer_t &buffer, std::vector<T> *dest) const {
   uint8_t *data = reinterpret_cast<uint8_t*>(dest->data());
   std::raw_storage_iterator<uint8_t*, uint8_t> raw_iter(data);
 
@@ -70,10 +71,10 @@ void Chunk_c::CopyDataBlock(Buffer_t &buffer, std::vector<T> *dest) {
 }
 
 template<typename T>
-void Chunk_c::CopyDataBlock(Buffer_t &buffer,
+void Chunk_c::CopyDataBlock(const Buffer_t &buffer,
                             uint32_t offset,
                             uint32_t num_elements,
-                            std::vector<T> *dest) {
+                            std::vector<T> *dest) const {
   uint8_t *data = reinterpret_cast<uint8_t*>(dest->data());
   std::raw_storage_iterator<uint8_t*, uint8_t> raw_iter(data);
 

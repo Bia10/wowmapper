@@ -2,8 +2,7 @@
 
 #include "../chunk_c.h"
 
-/*! \brief MWMO chunk.
- *  http://www.madx.dk/wowdev/wiki/index.php?title=ADT/v18#MWMO_chunk */
+/*! \brief MWMO: Map Chunk WMO Names. */
 struct MwmoChunk_s : public Chunk_c {
   std::string wmo_names;
 

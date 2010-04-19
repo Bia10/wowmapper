@@ -2,8 +2,7 @@
 
 #include "../chunk_c.h"
 
-/*! \brief MDDF chunk.
- *  http://www.madx.dk/wowdev/wiki/index.php?title=ADT/v18#MDDF_chunk */
+/*! \brief MDDF: Map Chunk Doodad Information. */
 struct MddfChunk_s : public Chunk_c {
   struct DoodadInfo_s {
     uint32_t id;

@@ -2,6 +2,7 @@
 
 #include "../chunk_c.h"
 
+/*! \brief MOPY: Map Object Material Info. */
 struct MopyChunk_s : public Chunk_c {
   struct MaterialInfo_s {
     uint8_t flags;

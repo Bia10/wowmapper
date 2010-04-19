@@ -6,9 +6,10 @@
 #include "modschunk_s.h"
 #include "moddchunk_s.h"
 #include "subwmo_c.h"
+#include "../model_c.h"
 #include "../../mpqhandler_c.h"
 
-class Wmo_c : public Chunk_c {
+class Wmo_c : public Model_c {
  public:
   Wmo_c(Buffer_t *buffer, std::string wmo_name, MpqHandler_c &mpq_h);
 

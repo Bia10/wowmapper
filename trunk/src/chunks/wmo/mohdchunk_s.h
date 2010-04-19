@@ -2,6 +2,7 @@
 
 #include "../chunk_c.h"
 
+/*! \brief MOHD: Map Object Header. */
 struct MohdChunk_s : public Chunk_c {
   uint32_t num_groups;
   uint32_t num_models;

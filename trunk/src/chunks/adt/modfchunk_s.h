@@ -2,8 +2,7 @@
 
 #include "../chunk_c.h"
 
-/*! \brief MODF chunk.
- *  http://www.madx.dk/wowdev/wiki/index.php?title=ADT/v18#MODF_chunk */
+/*! \brief MODF: Map Chunk Wmo Information. */
 struct ModfChunk_s : public Chunk_c {
   struct WmoInfo_s {
     uint32_t id;

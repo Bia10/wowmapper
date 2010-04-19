@@ -2,6 +2,7 @@
 
 #include "../chunk_c.h"
 
+/*! \brief MOVT: Map Object Vertices. */
 struct MovtChunk_s : public Chunk_c {
   Points_t vertices;
 

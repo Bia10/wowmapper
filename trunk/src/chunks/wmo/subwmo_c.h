@@ -6,6 +6,9 @@
 #include "movtchunk_s.h"
 #include "monrchunk_s.h"
 
+/*! \brief Beside root WMOs there are group WMOs or sub WMOs, which contain the
+ *         actual geometry data for the entire WMO. WMOs can consist of several
+ *         group/sub WMOs. Best example is Stormwind. */
 class SubWmo_c : public Chunk_c {
  public:
   SubWmo_c(Buffer_t *buffer);

@@ -11,20 +11,18 @@ Chunk_c::~Chunk_c() {
 	parent_ = NULL;
 }
 
-size_t Chunk_c::GetChunkSize(Buffer_t::const_iterator &first) const {
+size_t Chunk_c::GetSize(Buffer_t::const_iterator &first) const {
 	return *reinterpret_cast<const size_t*>(&(*first) + CHUNK_SIZE_OFFSET);
 }
 
-bool Chunk_c::GetSubChunk(const char *id,
-													uint32_t length,
-													Chunk_c *subChunk) const {
+bool Chunk_c::GetSubChunk(const std::string &id, Chunk_c *subChunk) const {
 	Buffer_t::const_iterator found, last;
-	found = std::search(buffer_.begin(), buffer_.end(), id, id+length);
+	found = std::search(buffer_.begin(), buffer_.end(), id.begin(), id.end());
 
 	if (found != buffer_.end()) {
 		try {
 		  // get first and last iter
-			size_t size = GetChunkSize(found);
+			size_t size = GetSize(found);
 			found += CHUNK_DATA_OFFSET;
 			last = found + size;
 
@@ -35,7 +33,7 @@ bool Chunk_c::GetSubChunk(const char *id,
 			subChunk->buffer_.clear();
 			return true;
 		} catch (std::exception &e) {
-		  std::cout << __LINE__ << " " << __FILE__ << ": " << e.what() << std::endl;
+		  std::cout << __FILE__ << " - GetSubChunk: " << e.what() << std::endl;
 		}
 	}
 
@@ -55,7 +53,7 @@ bool Chunk_c::GetSubChunk(uint32_t offset, Chunk_c *subChunk) const {
 			return true;
 		}
 	} catch (std::exception &e) {
-	  std::cout << __LINE__ << " " << __FILE__ << ": " << e.what() << std::endl;
+	  std::cout << __FILE__ << " - GetSubChunk: " << e.what() << std::endl;
 	}
 
 	return false;
