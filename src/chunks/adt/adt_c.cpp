@@ -4,12 +4,39 @@ Indices32_t Adt_c::obj_uids_;
 ModelMap_t Adt_c::model_map_;
 
 Adt_c::Adt_c(Buffer_t *buffer, MpqHandler_c &mpq_h)
-    : Chunk_c(buffer), mhdr_(this) {
-  GetSubChunk(0x0c, &mhdr_);
+    : Chunk_c(buffer),
+      mhdr_(this, 0xc),
+      mcin_(this, mhdr_.mcin_off),
+      mmdx_(this, mhdr_.mmdx_off),
+      mmid_(this, mhdr_.mmid_off),
+      mwmo_(this, mhdr_.mwmo_off),
+      mwid_(this, mhdr_.mwid_off),
+      mddf_(this, mhdr_.mddf_off),
+      modf_(this, mhdr_.modf_off) {
+  // check if we have to get MH2O chunk
+  if (mhdr_.mh2o_off) {
+    off_t mh2o_off = mhdr_.mh2o_off;
+    mh2o_ = std::auto_ptr<Mh2oChunk_s>(new Mh2oChunk_s(this, mh2o_off));
+  }
+
+  InitMcnks();
 
   BuildTerrain(true);
-  ParseDoodads(mpq_h, false); // true = use bounding volume, false = real mesh
-  ParseWmos(mpq_h);
+  ParseDoodads(mpq_h, true); // true = use bounding volume, false = real mesh
+  //ParseWmos(mpq_h);
+}
+
+Adt_c::~Adt_c() {
+  for (int i = 0; i < 256; i++) {
+    delete mcnks_[i];
+  }
+}
+
+void Adt_c::InitMcnks() {
+  mcnks_.reserve(256);
+  for (int i = 0; i < 256; i++) {
+    mcnks_.push_back(new McnkChunk_s(this, mcin_.mcnk_info[i].mcnk_off));
+  }
 }
 
 void Adt_c::CleanUp() {
@@ -32,14 +59,14 @@ void Adt_c::BuildTerrain(bool removeWet) {
   idx.reserve(256*768);
 
   // cycle through all mcnks and retrieve their geometry: 16*16 chunks
-  for (McinChunk_s::McnkChunks_t::iterator mcnk = mhdr_.mcin.mcnks.begin();
-       mcnk != mhdr_.mcin.mcnks.end();
+  for (McnkChunks_t::iterator mcnk = mcnks_.begin();
+       mcnk != mcnks_.end();
        ++mcnk) {
     Points_t vertices, normals;
     Indices32_t indices;
-    mcnk->mcvt.GetVertices(&vertices);
-    mcnk->mcnr.GetNormals(&normals);
-    mcnk->mcvt.GetIndices(&indices);
+    (*mcnk)->mcvt.GetVertices(&vertices);
+    (*mcnk)->mcnr.GetNormals(&normals);
+    (*mcnk)->mcvt.GetIndices(&indices);
 
     // merge all geometry information
     InsertIndices(indices, vtx.size(), &idx);
@@ -53,14 +80,14 @@ void Adt_c::BuildTerrain(bool removeWet) {
   // The concept behind all these nested loops is quite easy:
   // The first two loops will cycle through our 16*16 = 256 map chunks ..
   int wet_num = 0;
-  if (removeWet && (mhdr_.mh2o != NULL)) {
+  if (removeWet && (mh2o_.get() != NULL)) {
     for (int y = 0; y < 16; y++) {
       for (int x = 0; x < 16; x++) {
         int chunk_idx = y*16+x; // this our chunk index
         // .. then we check if we have any water in this chunk at all ..
-        for (uint32_t l = 0; l < mhdr_.mh2o->content[chunk_idx].layers; l++) {
+        for (uint32_t l = 0; l < mh2o_->content[chunk_idx].num_layers; l++) {
           // .. so we have water lets just get the water mask.
-          const uint64_t &mask = mhdr_.mh2o->content[chunk_idx].masks[l];
+          const uint64_t &mask = mh2o_->content[chunk_idx].masks[l];
           // The mask is a 64bit value which has a bit set for every water cell.
           for (int wy = 0; wy < 8; wy++) {
             for (int wx = 0; wx < 8; wx++) {
@@ -138,24 +165,21 @@ void Adt_c::BuildTerrain(bool removeWet) {
 }
 
 void Adt_c::ParseDoodads(MpqHandler_c &mpq_h, bool useCollisionModel) {
-  MddfChunk_s &mddf = mhdr_.mddf;
-  MmdxChunk_s &mmdx = mhdr_.mmdx;
-  MmidChunk_s &mmid = mhdr_.mmid;
 
-  for (McinChunk_s::McnkChunks_t::iterator mcnk = mhdr_.mcin.mcnks.begin();
-       mcnk != mhdr_.mcin.mcnks.end();
+  for (McnkChunks_t::iterator mcnk = mcnks_.begin();
+       mcnk != mcnks_.end();
        ++mcnk) {
-    for (Indices32_t::iterator offset = mcnk->mcrf.doodad_offsets.begin();
-         offset != mcnk->mcrf.doodad_offsets.end();
-         ++offset) {
-      const MddfChunk_s::DoodadInfo_s &info = mddf.doodad_info.at(*offset);
+    for (Indices32_t::iterator off = (*mcnk)->mcrf.doodad_offs.begin();
+        off != (*mcnk)->mcrf.doodad_offs.end();
+         ++off) {
+      const MddfChunk_s::DoodadInfo_s &info = mddf_.doodad_infos.at(*off);
       // check if obj with unique id has already been placed
       if (CheckUid(info.uid)) { continue; }
 
-      std::string filename(mmdx.m2_names.c_str()+mmid.name_offsets.at(info.id));
+      std::string filename(mmdx_.m2_names.c_str()+mmid_.name_offs.at(info.id));
 
       // replace false extensions with right one
-      RreplaceStr(ToLower(filename), ".mdx", ".m2", &filename);
+      RreplaceWoWExt(ToLower(filename), ".mdx", ".m2", &filename);
 
       m2s_.push_back(Mesh_s());
       Mesh_s &m2_mesh = m2s_.back();
@@ -192,7 +216,7 @@ M2_c* Adt_c::GetM2(MpqHandler_c &mpq_h, const std::string &filename, bool loadSk
 
     if (loadSkin) {
       std::string skin_name(ToLower(filename));
-      RreplaceStr(skin_name, ".m2", "00.skin", &skin_name);
+      RreplaceWoWExt(skin_name, ".m2", "00.skin", &skin_name);
 
       Buffer_t skin_buf;
       mpq_h.LoadFile(skin_name.c_str(), &skin_buf);
@@ -205,7 +229,7 @@ M2_c* Adt_c::GetM2(MpqHandler_c &mpq_h, const std::string &filename, bool loadSk
 }
 
 void Adt_c::ParseWmos(MpqHandler_c &mpq_h) {
-  ModfChunk_s &modf = mhdr_.modf;
+  /*ModfChunk_s &modf = mhdr_.modf;
   MwidChunk_s &mwid = mhdr_.mwid;
   MwmoChunk_s &mwmo = mhdr_.mwmo;
 
@@ -238,10 +262,10 @@ void Adt_c::ParseWmos(MpqHandler_c &mpq_h) {
     wmo_mesh.idx.assign(idx.begin(), idx.end());
     wmo_mesh.norm.assign(norm.begin(), norm.end());
     wmo_mesh.col.assign(col.begin(), col.end());
-  }
+  }*/
 }
 
-Wmo_c* Adt_c::GetWmo(MpqHandler_c &mpq_h, const std::string &filename) {
+/*Wmo_c* Adt_c::GetWmo(MpqHandler_c &mpq_h, const std::string &filename) {
   // check if wmo with filename is in our map ..
   ModelMap_t::iterator found = model_map_.find(filename);
   if (found != model_map_.end()) {
@@ -256,7 +280,7 @@ Wmo_c* Adt_c::GetWmo(MpqHandler_c &mpq_h, const std::string &filename) {
     model_map_.insert(ModelPair_t(filename, wmo));
     return wmo;
   }
-}
+}*/
 
 bool Adt_c::CheckUid(uint32_t uid) const {
   Indices32_t::iterator found;

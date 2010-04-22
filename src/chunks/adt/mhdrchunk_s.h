@@ -1,50 +1,23 @@
 #pragma once
 
-#include "mcinchunk_s.h"
-#include "mmdxchunk_s.h"
-#include "mmidchunk_s.h"
-#include "mwmochunk_s.h"
-#include "mwidchunk_s.h"
-#include "mddfchunk_s.h"
-#include "modfchunk_s.h"
-#include "mh2ochunk_s.h"
-
-const static uint32_t SUB_REL_OFFSET = 0x14; // relative offset for sub chunks
+#include "../chunk_c.h"
 
 /*! \brief MHDR: Map Chunk Header. */
 struct MhdrChunk_s : public Chunk_c {
-	McinChunk_s mcin;   //!< map chunks
-	MmdxChunk_s mmdx;   //!< model filenames
-  MmidChunk_s mmid;   //!< model ids (offsets to filenames)
-  MwmoChunk_s mwmo;   //!< wmo filenames
-  MwidChunk_s mwid;   //!< wmo ids (offsets to filenames)
-  MddfChunk_s mddf;   //!< doodad information
-  ModfChunk_s modf;   //!< wmo information
-  Mh2oChunk_s *mh2o;  //!< water information
+  off_t mcin_off; //!< MCIN offset
+  off_t mtex_off; //!< MTEX offset
+  off_t mmdx_off; //!< MMDX offset
+  off_t mmid_off; //!< MMID offset
+  off_t mwmo_off; //!< MWMO offset
+  off_t mwid_off; //!< MWID offset
+  off_t mddf_off; //!< MDDF offset
+  off_t modf_off; //!< MODF offset
+  off_t mfbo_off; //!< MFBO offset
+  off_t mh2o_off; //!< MH2O offset
+  off_t mftx_off; //!< MFTX offset
 
-	MhdrChunk_s(Chunk_c *parent)
-      : Chunk_c(parent), mcin(this), mmdx(this), mmid(this), mwmo(this),
-        mwid(this), mddf(this), modf(this), mh2o(NULL) { }
+  MhdrChunk_s(Chunk_c *parent, off_t off);
 
-	~MhdrChunk_s() {
-	  delete mh2o; mh2o = NULL;
-	}
-
- protected:
-	virtual void LateInit() {
-	  // get sub chunks by total position in adt file, not relative
-    parent_->GetSubChunk(GetField<uint32_t>(0x04) + SUB_REL_OFFSET, &mcin);
-    parent_->GetSubChunk(GetField<uint32_t>(0x0c) + SUB_REL_OFFSET, &mmdx);
-    parent_->GetSubChunk(GetField<uint32_t>(0x10) + SUB_REL_OFFSET, &mmid);
-    parent_->GetSubChunk(GetField<uint32_t>(0x14) + SUB_REL_OFFSET, &mwmo);
-    parent_->GetSubChunk(GetField<uint32_t>(0x18) + SUB_REL_OFFSET, &mwid);
-    parent_->GetSubChunk(GetField<uint32_t>(0x1c) + SUB_REL_OFFSET, &mddf);
-    parent_->GetSubChunk(GetField<uint32_t>(0x20) + SUB_REL_OFFSET, &modf);
-    // check if mh2o chunk exists
-    uint32_t mh2o_off = GetField<uint32_t>(0x28);
-    if (mh2o_off) {
-      mh2o = new Mh2oChunk_s(this);
-      parent_->GetSubChunk(mh2o_off + SUB_REL_OFFSET, mh2o);
-    }
-  }
+ private:
+	const static off_t SUB_OFFSET = 0x14; // relative offset for sub chunks
 };
