@@ -1,9 +1,18 @@
 #pragma once
 
 #include "mhdrchunk_s.h"
+#include "mcinchunk_s.h"
+#include "mmdxchunk_s.h"
+#include "mmidchunk_s.h"
+#include "mwmochunk_s.h"
+#include "mwidchunk_s.h"
+#include "mddfchunk_s.h"
+#include "modfchunk_s.h"
+#include "mh2ochunk_s.h"
+#include "mcnkchunk_s.h"
 #include "../m2/m2_c.h"
 #include "../m2/skin_c.h"
-#include "../wmo/wmo_c.h"
+//#include "../wmo/wmo_c.h"
 #include "../../mpqhandler_c.h"
 
 class Model_c;
@@ -15,6 +24,7 @@ typedef std::pair<std::string, Model_c*> ModelPair_t;
 class Adt_c : public Chunk_c {
  public:
 	Adt_c(Buffer_t *buffer, MpqHandler_c &mpq_h);
+	virtual ~Adt_c();
 
 	static void CleanUp();
 
@@ -51,9 +61,22 @@ class Adt_c : public Chunk_c {
 	 *  \param mpq_h MPQ handler.
    *  \param filename M2 filename.
    *  \return Returns a WMO model. */
-	Wmo_c* GetWmo(MpqHandler_c &mpq_h, const std::string &filename);
+	//Wmo_c* GetWmo(MpqHandler_c &mpq_h, const std::string &filename);
+	void InitMcnks();
 
-	MhdrChunk_s mhdr_;             //!< MHDR chunk
+	MhdrChunk_s mhdr_;                //!< MHDR chunk
+	McinChunk_s mcin_;                //!< map chunks
+  MmdxChunk_s mmdx_;                //!< model filenames
+  MmidChunk_s mmid_;                //!< model ids (offsets to filenames)
+  MwmoChunk_s mwmo_;                //!< wmo filenames
+  MwidChunk_s mwid_;                //!< wmo ids (offsets to filenames)
+  MddfChunk_s mddf_;                //!< doodad information
+  ModfChunk_s modf_;                //!< wmo information
+  std::auto_ptr<Mh2oChunk_s> mh2o_; //!< water information
+
+  typedef std::vector<McnkChunk_s*> McnkChunks_t;
+  McnkChunks_t mcnks_;
+
 	Mesh_s terrain_;               //!< Terrain mesh
 	Mesh_s water_;                 //!< Water mesh
 	Meshes_t m2s_;                 //!< M2 meshes
