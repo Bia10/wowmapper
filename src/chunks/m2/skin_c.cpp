@@ -2,18 +2,16 @@
 
 Skin_c::Skin_c(Buffer_t *buffer) : Chunk_c(buffer) {
   // retrieve information blocks
-  BlockInfo_s idx_info = GetField<BlockInfo_s>(0x04);
+  BlockInfo_s idx_info = GetValue<BlockInfo_s>(0x04, 0);
   indices_.resize(idx_info.num);
-  BlockInfo_s tri_info = GetField<BlockInfo_s>(0x0c);
+  BlockInfo_s tri_info = GetValue<BlockInfo_s>(0x0c, 0);
   triangles_.resize(tri_info.num);
 
-  CopyDataBlock(buffer_, idx_info.offset, idx_info.num, &indices_);
-  CopyDataBlock(buffer_, tri_info.offset, tri_info.num, &triangles_);
+  CopyVector(GetBuffer(), idx_info.offset, idx_info.num, &indices_);
+  CopyVector(GetBuffer(), tri_info.offset, tri_info.num, &triangles_);
 }
 
 void Skin_c::GetIndices(Indices32_t *buffer) const {
-  buffer->reserve(triangles_.size());
-
   try {
     for (Indices16_t::const_iterator tri = triangles_.begin();
          tri != triangles_.end();

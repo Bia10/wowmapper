@@ -2,8 +2,6 @@
 
 #include "../common.h"
 
-class MpqHandler_c;
-
 /*! \brief Base chunk class for all chunked wow data or alike. */
 class Chunk_c {
  public:
@@ -30,6 +28,7 @@ class Chunk_c {
 	//bool GetSubChunk(off_t off, Chunk_c *subChunk) const;
   off_t GetCurOffset() const;
   size_t GetSize() const;
+  off_t GetOffsetToNext() const;
 
  protected:
 
@@ -40,19 +39,20 @@ class Chunk_c {
 	 *         structs made of PODs.
 	 *  \param off Offset to data field.
 	 *  \return Returns a reference to the data. */
-	template<typename T> const T& GetValue(off_t off) const;
+	template<typename T> const T& GetValue(off_t off, off_t base_off = DATA_OFFSET) const;
 	/* \brief Template function to fill any kind of vector with data directly
 	 *        from the buffer.
    * \param buf Input buffer (usually chunk buffer).
-   * \param off Offset to vectored data.
+   * \param buf_off Offset to vectored data.
    * \param num Number of items in the vector to copy.
+   * \param dest_off Offset in destination.
    * \param dest Destination vector where data gets copied to.
    * \return Return true on success, false otherwise. */
-	template<typename T> void CopyVector(const Buffer_t &buf, off_t off, size_t num, std::vector<T> *dest) const;
+	template<typename T> void CopyVector(const Buffer_t &buf, off_t buf_off, size_t num, std::vector<T> *dest, off_t dest_off = 0) const;
 	template<typename T> void CopyVector(const Buffer_t &buf, std::vector<T> *dest) const;
 
-	Chunk_c *parent_;  //<! Parent chunk
-	off_t off_;        //<! Sub chunk offset to parent
+	Chunk_c *parent_;        //<! Parent chunk
+	off_t off_;              //<! Sub chunk offset to parent
 
 	static const off_t SIZE_OFFSET = 0x4; //!< Offset in chunk to size
 	static const off_t DATA_OFFSET = 0x8; //!< Offset in chunk to data
@@ -63,18 +63,19 @@ class Chunk_c {
 };
 
 template<typename T>
-const T& Chunk_c::GetValue(off_t off) const {
-	off_t real_off = DATA_OFFSET + GetCurOffset() + off;
+const T& Chunk_c::GetValue(off_t off, off_t base_off) const {
+	off_t real_off = base_off + GetCurOffset() + off;
 	return *reinterpret_cast<const T*>(&GetBuffer().at(real_off));
 }
 
 template<typename T>
-void Chunk_c::CopyVector(const Buffer_t &buf, off_t off,
-                         size_t num, std::vector<T> *dest) const {
+void Chunk_c::CopyVector(const Buffer_t &buf, off_t buf_off,
+                         size_t num, std::vector<T> *dest,
+                         off_t dest_off) const {
   uint8_t *data = reinterpret_cast<uint8_t*>(dest->data());
-  std::raw_storage_iterator<uint8_t*, uint8_t> raw_iter(data);
+  std::raw_storage_iterator<uint8_t*, uint8_t> raw_iter(data+(dest_off*sizeof(T)));
 
-  std::copy(buf.begin()+off, buf.begin()+off+(num*sizeof(T)), raw_iter);
+  std::copy(buf.begin()+buf_off, buf.begin()+buf_off+(num*sizeof(T)), raw_iter);
 }
 
 template<typename T>

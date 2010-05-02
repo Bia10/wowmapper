@@ -6,10 +6,12 @@
 struct MognChunk_s : public Chunk_c {
   std::string group_names;
 
-  MognChunk_s(Chunk_c *parent) : Chunk_c(parent) { }
 
- protected:
-  virtual void LateInit() {
-    group_names.assign(buffer_.begin(), buffer_.end());
+  MognChunk_s(Chunk_c *parent, off_t off)
+      : Chunk_c(parent, off) {
+    size_t name_size = GetSize();
+    Buffer_t names(name_size);
+    CopyVector(GetBuffer(), GetCurOffset()+DATA_OFFSET, name_size, &names);
+    group_names.assign(names.begin(), names.end());
   }
 };

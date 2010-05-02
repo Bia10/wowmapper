@@ -6,7 +6,7 @@
 #include "movtchunk_s.h"
 #include "monrchunk_s.h"
 
-/*! \brief Beside root WMOs there are group WMOs or sub WMOs, which contain the
+/*! \brief Beside root WMOs there are group WMOs/sub WMOs, which contain the
  *         actual geometry data for the entire WMO. WMOs can consist of several
  *         group/sub WMOs. Best example is Stormwind. */
 class SubWmo_c : public Chunk_c {
@@ -14,8 +14,9 @@ class SubWmo_c : public Chunk_c {
   SubWmo_c(Buffer_t *buffer);
 
   const Indices16_t& indices() const { return movi_.indices; }
-  const Points_t& vertices() const { return movt_.vertices; }
-  const Points_t& normals() const { return monr_.normals; }
+  const Vertices_t& vertices() const { return movt_.vertices; }
+  const Vertices_t& normals() const { return monr_.normals; }
+
   const MopyChunk_s& mopy() const { return mopy_; }
 
  private:

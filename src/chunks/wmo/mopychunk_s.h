@@ -8,16 +8,15 @@ struct MopyChunk_s : public Chunk_c {
     uint8_t flags;
     uint8_t id;
   };
-  typedef std::vector<MaterialInfo_s> MaterialInfo_t;
+  typedef std::vector<MaterialInfo_s> MaterialInfos_t;
+
+  MaterialInfos_t mat_infos;
 
 
-  MaterialInfo_t mat_info;
-
-  MopyChunk_s(Chunk_c *parent) : Chunk_c(parent) { }
-
- protected:
-  virtual void LateInit() {
-    mat_info.resize(buffer_.size()/sizeof(MaterialInfo_s));
-    CopyDataBlock(buffer_, &mat_info);
+  MopyChunk_s(Chunk_c *parent, off_t off)
+      : Chunk_c(parent, off) {
+    size_t num_infos = GetSize() / sizeof(MaterialInfo_s);
+    mat_infos.resize(num_infos);
+    CopyVector(GetBuffer(), GetCurOffset()+DATA_OFFSET, num_infos, &mat_infos);
   }
 };

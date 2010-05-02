@@ -4,13 +4,12 @@
 
 /*! \brief MONR: Map Object Normals. */
 struct MonrChunk_s : public Chunk_c {
-  Points_t normals;
+  Normals_t normals;
 
-  MonrChunk_s(Chunk_c *parent) : Chunk_c(parent) { }
-
- protected:
-  virtual void LateInit() {
-    normals.resize(buffer_.size()/sizeof(glm::vec3));
-    CopyDataBlock(buffer_, &normals);
+  MonrChunk_s(Chunk_c *parent, off_t off)
+      : Chunk_c(parent, off) {
+    size_t num_normals = GetSize() / sizeof(glm::vec3);
+    normals.resize(num_normals);
+    CopyVector(GetBuffer(), GetCurOffset()+DATA_OFFSET, num_normals, &normals);
   }
 };

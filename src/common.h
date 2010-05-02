@@ -15,6 +15,7 @@
 #include <float.h>
 #include <limits>
 
+#include <sys/types.h>
 #include <dirent.h>
 #include <string.h>
 #include <stdint.h>
@@ -23,21 +24,10 @@
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
-#include <glm/gtc/quaternion.hpp>
+#include <glm/gtx/quaternion.hpp>
 
-/* TYPEDEFS */
-typedef std::vector<glm::vec3>    Points_t;
-typedef std::vector<glm::vec2>    TexCoords_t;
-typedef std::vector<uint16_t>     Indices16_t;
-typedef std::vector<uint32_t>     Indices32_t;
-typedef std::vector<uint64_t>     Indices64_t;
+#include "types.h"
 
-typedef std::vector<uint8_t>      Buffer_t;
-typedef std::vector<std::string>  Filenames_t;
-
-typedef std::bitset<8>            BitSet8_t;
-typedef std::bitset<16>           BitSet16_t;
-typedef std::bitset<32>           BitSet32_t;
 
 #define TU 2.08333333333333f // Tile Units, 100.0f / (3.0f * 16.0f);
 
@@ -46,22 +36,10 @@ struct BlockInfo_s {
   uint32_t offset;
 };
 
-/*! \brief Bounding box. */
-struct BBox_s {
-  glm::vec3 min, max;
-};
-
-/*! \brief Mesh containing geometry. */
-struct Mesh_s {
-  Points_t vtx;
-  Points_t norm;
-  Indices32_t idx;
-  Indices32_t col;
-  TexCoords_t txc;
-  BBox_s bbox;
-};
-
-typedef std::list<Mesh_s> Meshes_t;
+// model map
+class Model_c;
+typedef std::map<std::string, Model_c*> ModelMap_t;
+typedef std::pair<std::string, Model_c*> ModelPair_t;
 
 /*! \brief Template function used to insert a new set of indices into already
  *         existing indices, with an offset to make them align properly.
@@ -101,28 +79,81 @@ static std::string ToLower(const std::string &str) {
   return lower;
 }
 
+static void TranslateVertices(const glm::vec3 &pos, Vertices_t *vertices,
+                              off_t off, size_t num) {
+  // rotation
+  glm::vec3 transl(pos.x, pos.y, pos.z);
+
+  // transform vertices
+  for (size_t i = off; i < (off+num); i++) {
+    (*vertices)[i] += transl;
+  }
+}
+
 /*! \brief Transforms WoW coordinates to RH coordinates.
  *  \param pos Translation.
  *  \param rot Rotation.
  *  \param scale Scale.
  *  \param vertices Vertices to be transformed. */
-static void TransWoWToRH(const glm::vec3 &pos, const glm::vec3 &rot,
-                         float scale, Points_t *vertices) {
+static void TransformVertices(const glm::vec3 &pos, const glm::vec3 &rot,
+                              float scale, Vertices_t *vertices,
+                              off_t off, size_t num) {
   // rotation
   glm::mat4 rot_mtx;
-  rot_mtx = glm::rotate(rot_mtx, rot.y-90, glm::vec3(0, 1, 0));
-  rot_mtx = glm::rotate(rot_mtx, -rot.x, glm::vec3(0, 0, 1));
-  rot_mtx = glm::rotate(rot_mtx, rot.z-90, glm::vec3(1, 0, 0));
-
-  // translation
-  glm::vec3 transl(pos.x-17066.666666f, pos.y, pos.z-17066.666666f);
+  rot_mtx = glm::rotate(rot_mtx, rot.y, glm::vec3(0, 1, 0));
+  rot_mtx = glm::rotate(rot_mtx, rot.x, glm::vec3(0, 0, 1));
+  rot_mtx = glm::rotate(rot_mtx, rot.z, glm::vec3(1, 0, 0));
 
   // transform vertices
-  for (Points_t::iterator vtx = vertices->begin();
-       vtx != vertices->end();
-       ++vtx) {
-    glm::vec4 vtx4(*vtx, 0);
+  for (size_t i = off; i < (off+num); i++) {
+    glm::vec3 &vtx = (*vertices)[i];
+    glm::vec4 vtx4(vtx, 0);
     vtx4 = scale * rot_mtx * vtx4;
-    *vtx = glm::vec3(vtx4) + transl;
+    vtx = glm::vec3(vtx4) + pos;
   }
+}
+
+static void TransformVertices(const glm::vec3 &pos, const glm::quat &rot,
+                              float scale, Vertices_t *vertices,
+                              off_t off, size_t num) {
+  // transform vertices
+  for (size_t i = off; i < (off+num); i++) {
+    glm::vec3 &vtx = (*vertices)[i];
+    vtx = glm::gtx::quaternion::rotate(rot, vtx) * scale + pos;
+  }
+}
+
+/*! \brief This function will rearrange your geometry buffer based on marked indices.
+ *         Marked indices are indices which are set to: uint_max == -1 == 0xffffffff */
+static void RearrangeBuffers(Indices32_t *indices, Vertices_t *vertices,
+                             Normals_t *normals) {
+  Indices32_t idx_map(indices->size(), 0xffffffff); // indices remapped
+  Indices32_t new_idx;                              // new indices
+  new_idx.reserve(indices->size());
+
+  // new vertices and normals
+  Vertices_t new_vtx;
+  Normals_t new_norm;
+
+  size_t new_count = 0;
+  for(size_t i = 0; i < indices->size(); i++) {
+    uint32_t marked_index = (*indices)[i];
+    // check if index is marked
+    if (marked_index != 0xffffffff) {
+      // if not check for an already new index in the index map
+      if (idx_map[marked_index] == 0xffffffff) {
+        // we have a new index so map the new value and insert vtx and norms
+        idx_map[marked_index] = new_count;
+        new_vtx.push_back((*vertices)[marked_index]);
+        new_norm.push_back((*normals)[marked_index]);
+        new_count++;
+      }
+      // push mapped index value to new index array
+      new_idx.push_back(idx_map[marked_index]);
+    }
+  }
+
+  indices->swap(new_idx);
+  vertices->swap(new_vtx);
+  normals->swap(new_norm);
 }

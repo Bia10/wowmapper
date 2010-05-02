@@ -3,7 +3,7 @@
 #include <GL/glew.h>
 #include <GL/freeglut.h>
 
-#include "common.h"
+#include "../common.h"
 #include "camera_c.h"
 
 class GlView_c {
@@ -12,8 +12,8 @@ class GlView_c {
   ~GlView_c();
 
   void Initialize(uint32_t indices);
-  void SetBuffers(const Points_t *vertices, const Points_t *normals,
-      const Indices32_t *indices, const Indices32_t *colors);
+  void SetBuffers(const Indices32_t *indices, const Vertices_t *vertices,
+                  const Normals_t *normals, const Colors_t *colors);
   void Go() const { glutMainLoop(); }
 
  private:

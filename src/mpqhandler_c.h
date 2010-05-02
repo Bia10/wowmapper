@@ -14,18 +14,18 @@ class MpqHandler_c {
  public:
   /*! \brief Initializes handler and sets search directory.
    *  \param searchDir Search directory */
-  MpqHandler_c(const char *searchDir = ".");
+  MpqHandler_c(const std::string &searchDir = ".");
   ~MpqHandler_c();
   /*! \brief Reads a file from our opened MPQs and returns it via buffer.
    *  \param filename Filename including full path of the file
    *  \param buffer File buffer
    *  \return True if file was successfully read, otherwise false. */
-  bool LoadFile(const char *filename, Buffer_t *buffer) const;
+  bool LoadFile(const std::string &filename, Buffer_t *buffer) const;
   //int64_t LoadFileByName(const char *a, uint8_t **buffer) {}
 
  private:
   void GetMpqs();
-  int32_t OpenMpq(const char *filename);
+  int32_t OpenMpq(const std::string &filename);
 
   std::string search_dir_;
   WowFileMap_t wow_file_map_;
