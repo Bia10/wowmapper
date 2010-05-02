@@ -45,13 +45,13 @@ int main(int argc, char **argv) {
 	  // load file into buffer and pass it to adt
 	  mpq_h.LoadFile(*name, &file_buf);
 	  Adt_c adt(&file_buf, &uids);
-	  adt.LoadWmos(mpq_h, true);
-	  adt.LoadDoodads(mpq_h, true);
+	  adt.LoadWmos(mpq_h, true);     // true == detailed mesh, not collision mesh
+	  adt.LoadDoodads(mpq_h, true);  // true == detailed mesh, not collision mesh
 
 	  // retrieve terrain mesh
 	  meshes.push_back(Mesh_c());
 	  Mesh_c &mesh = meshes.back();
-	  adt.BuildTerrain(true, &mesh);
+	  adt.BuildTerrain(true, &mesh); // true == remove vertices covered by water
 	  // retrieve wmos, wmo-doodads and doodads
 	  adt.GetWmos(&meshes, &meshes);
 	  adt.GetDoodads(&meshes);
