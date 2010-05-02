@@ -3,12 +3,12 @@
 #include "../chunks/adt/adt_c.h"
 #include "glview_c.h"
 
+void MergeMeshes(const Meshes_t &meshes, Mesh_c *finalMesh);
+
 // This sample show you how to create a simple console app to display your
 // maps. Console input would look like this:
-//  ->  sample_consoleapp  DIR  WDT_DIR  ADT_OFFSET  ADT_NUM
+// Prototype:  sample_consoleapp  DIR  WDT_DIR  ADT_OFFSET  ADT_NUM
 //    -> ./sample_consoleapp . World\\maps\\Azeroth\\Azeroth 256 64
-
-void MergeMeshes(const Meshes_t &meshes, Mesh_c *finalMesh);
 
 int main(int argc, char **argv) {
   std::string mpq_dir(argv[1]);   // retrieve mpq directory if
@@ -35,8 +35,8 @@ int main(int argc, char **argv) {
 	// start clock
 	clock_t start = clock();
 
-	Indices32_t uids;          // unique identifiers to insert models only once
-	Meshes_t meshes;           // mesh vector
+	Indices32_t uids;        // unique identifiers to insert models only once
+	Meshes_t meshes;         // mesh vector
 	meshes.reserve(100000);  // IMPORTANT: reserve enough entries for ALL meshes
 
 	// start loading
