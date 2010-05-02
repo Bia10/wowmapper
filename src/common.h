@@ -110,6 +110,16 @@ static void TransformVertices(const glm::vec3 &pos, const glm::vec3 &rot,
   }
 }
 
+static void TransformVertices(const glm::vec3 &pos, const glm::quat &rot,
+                              float scale, Vertices_t *vertices,
+                              off_t off, size_t num) {
+  // transform vertices
+  for (size_t i = off; i < (off+num); i++) {
+    glm::vec3 &vtx = (*vertices)[i];
+    vtx = glm::gtx::quaternion::rotate(rot, vtx) * scale + pos;
+  }
+}
+
 /*! \brief This function will rearrange your geometry buffer based on marked indices.
  *         Marked indices are indices which are set to: uint_max == -1 == 0xffffffff */
 static void RearrangeBuffers(Indices32_t *indices, Vertices_t *vertices,
