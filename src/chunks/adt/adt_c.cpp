@@ -131,20 +131,6 @@ void Adt_c::BuildTerrain(bool removeWet, Mesh_c *mesh) {
         }
       }
     }
-  } else {
-    RearrangeBuffers(&idx, &vtx, &norm);
-    mesh->SetColors(&Colors_t(vtx.size(), 0xff127e14)); // ABGR
-    mesh->SetGeometry(&idx, &vtx, &norm);
-    return;
-  }
-
-  // this will mark all remaining terrain below ocean level (heigth=0)
-  for (uint32_t i = 0; i < idx.size(); i++) {
-    if (vtx[idx[i]].y <= 0) {
-      idx[(i/3)*3+0] = -1;
-      idx[(i/3)*3+1] = -1;
-      idx[(i/3)*3+2] = -1;
-    }
   }
 
   RearrangeBuffers(&idx, &vtx, &norm);
