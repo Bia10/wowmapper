@@ -7,19 +7,17 @@ struct MogiChunk_s : public Chunk_c {
   struct GroupInfo_s {
     uint32_t flags;
     glm::vec3 bb_min, bb_max;
-    uint32_t name_index;
+    off_t name_off;
   };
-  typedef std::vector<GroupInfo_s> GroupInfo_t;
+  typedef std::vector<GroupInfo_s> GroupInfos_t;
+
+  GroupInfos_t group_infos;
 
 
-  GroupInfo_t group_info;
-
-
-  MogiChunk_s(Chunk_c *parent) : Chunk_c(parent) { }
-
- protected:
-  virtual void LateInit() {
-    group_info.resize(buffer_.size()/sizeof(GroupInfo_s));
-    CopyDataBlock(buffer_, &group_info);
+  MogiChunk_s(Chunk_c *parent, off_t off)
+      : Chunk_c(parent, off) {
+    size_t num_infos = GetSize() / sizeof(GroupInfo_s);
+    group_infos.resize(num_infos);
+    CopyVector(GetBuffer(), GetCurOffset()+DATA_OFFSET, num_infos, &group_infos);
   }
 };

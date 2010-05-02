@@ -5,7 +5,10 @@ Chunk_c::Chunk_c(Buffer_t *buffer)
   buffer_.swap(*buffer);
 }
 
-Chunk_c::Chunk_c(Chunk_c *parent, off_t off) : parent_(parent), off_(off) {}
+Chunk_c::Chunk_c(Chunk_c *parent, off_t off)
+    : parent_(parent), off_(off) {
+
+}
 
 Chunk_c::~Chunk_c() {
 	parent_ = NULL;
@@ -27,8 +30,11 @@ const Buffer_t& Chunk_c::GetBuffer() const {
 }
 
 size_t Chunk_c::GetSize() const {
-  off_t real_off = SIZE_OFFSET + GetCurOffset();
-  return *reinterpret_cast<const size_t*>(&GetBuffer().at(real_off));
+  return GetValue<size_t>(0, SIZE_OFFSET);
+}
+
+off_t Chunk_c::GetOffsetToNext() const {
+  return GetCurOffset()+GetSize()+DATA_OFFSET; // +0x8 because header and size must be considered
 }
 
 /*bool Chunk_c::GetSubChunk(const std::string &id, Chunk_c *subChunk) const {

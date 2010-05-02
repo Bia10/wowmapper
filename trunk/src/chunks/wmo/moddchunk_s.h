@@ -5,22 +5,22 @@
 /*! \brief MODD: Map Object Doodad Information. */
 struct ModdChunk_s : public Chunk_c {
   struct DoodadInfo_s {
-    uint32_t name_offset;
-    glm::vec3 position;
-    glm::vec4 orientation;
-    float scale;
-    uint32_t lighting_color;
+    off_t name_off;           //!< Offset to name
+    glm::vec3 pos;            //!< Position
+    glm::quat rot;            //!< Rotation (quaternion)
+    float scale;              //!< Scale
+    uint32_t lighting_color;  //!< Lighting Color
   };
-  typedef std::vector<DoodadInfo_s> DoodadInfo_t;
+  typedef std::vector<DoodadInfo_s> DoodadInfos_t;
+
+  DoodadInfos_t doodad_infos;
 
 
-  DoodadInfo_t doodad_info;
+  ModdChunk_s(Chunk_c *parent, off_t off)
+      : Chunk_c(parent, off) {
+    size_t num_infos = GetSize() / sizeof(DoodadInfo_s);
+    doodad_infos.resize(num_infos);
 
-  ModdChunk_s(Chunk_c *parent) : Chunk_c(parent) { }
-
- protected:
-  virtual void LateInit() {
-    doodad_info.resize(buffer_.size()/sizeof(DoodadInfo_s));
-    CopyDataBlock(buffer_, &doodad_info);
+    CopyVector(GetBuffer(), GetCurOffset()+DATA_OFFSET, num_infos, &doodad_infos);
   }
 };

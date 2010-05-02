@@ -1,10 +1,10 @@
 #include "adt_c.h"
 
-Indices32_t Adt_c::obj_uids_;
 ModelMap_t Adt_c::model_map_;
 
-Adt_c::Adt_c(Buffer_t *buffer, MpqHandler_c &mpq_h)
+Adt_c::Adt_c(Buffer_t *buffer, Indices32_t *obj_uids)
     : Chunk_c(buffer),
+      obj_uids_(obj_uids),
       mhdr_(this, 0xc),
       mcin_(this, mhdr_.mcin_off),
       mmdx_(this, mhdr_.mmdx_off),
@@ -16,17 +16,15 @@ Adt_c::Adt_c(Buffer_t *buffer, MpqHandler_c &mpq_h)
   // check if we have to get MH2O chunk
   if (mhdr_.mh2o_off) {
     off_t mh2o_off = mhdr_.mh2o_off;
-    mh2o_ = std::auto_ptr<Mh2oChunk_s>(new Mh2oChunk_s(this, mh2o_off));
+    mh2o_ = Mh2oChunk_p(new Mh2oChunk_s(this, mh2o_off));
   }
 
+  // retrieve mcnk chunks now we have the mcin info
   InitMcnks();
-
-  BuildTerrain(true);
-  ParseDoodads(mpq_h, true); // true = use bounding volume, false = real mesh
-  //ParseWmos(mpq_h);
 }
 
 Adt_c::~Adt_c() {
+  // destroy mcnk chunks
   for (int i = 0; i < 256; i++) {
     delete mcnks_[i];
   }
@@ -35,47 +33,73 @@ Adt_c::~Adt_c() {
 void Adt_c::InitMcnks() {
   mcnks_.reserve(256);
   for (int i = 0; i < 256; i++) {
-    mcnks_.push_back(new McnkChunk_s(this, mcin_.mcnk_info[i].mcnk_off));
+    off_t mcnk_off = mcin_.mcnk_info[i].mcnk_off;
+    mcnks_.push_back(new McnkChunk_s(this, mcnk_off));
   }
 }
 
 void Adt_c::CleanUp() {
   for (ModelMap_t::iterator model = model_map_.begin();
-       model != model_map_.end(); ++model) {
+       model != model_map_.end();
+       ++model) {
     delete model->second;
   }
   model_map_.clear();
 }
 
-void Adt_c::BuildTerrain(bool removeWet) {
-  Points_t &vtx = terrain_.vtx;
-  Points_t &norm = terrain_.norm;
-  Indices32_t &idx = terrain_.idx;
-  Indices32_t &col = terrain_.col;
+void Adt_c::BuildTerrain(bool removeWet, Mesh_c *mesh) {
+  Indices32_t idx;
+  Vertices_t vtx;
+  Normals_t norm;
 
   // reserve space for terrain
   vtx.reserve(256*145);
   norm.reserve(256*145);
   idx.reserve(256*768);
 
-  // cycle through all mcnks and retrieve their geometry: 16*16 chunks
-  for (McnkChunks_t::iterator mcnk = mcnks_.begin();
-       mcnk != mcnks_.end();
-       ++mcnk) {
-    Points_t vertices, normals;
-    Indices32_t indices;
-    (*mcnk)->mcvt.GetVertices(&vertices);
-    (*mcnk)->mcnr.GetNormals(&normals);
-    (*mcnk)->mcvt.GetIndices(&indices);
+  // set position of mesh to first chunks position
+  const Vec3_t &pos = mcnks_.front()->position;
+  mesh->SetPositon(Vec3_t(-pos.y, 0, -pos.x));
 
-    // merge all geometry information
-    InsertIndices(indices, vtx.size(), &idx);
-    vtx.insert(vtx.end(), vertices.begin(), vertices.end());
-    norm.insert(norm.end(), normals.begin(), normals.end());
+  // cycle through all mcnks and retrieve their geometry: 16*16 chunks
+  for (int y = 0; y < 16; y++) {
+    for (int x = 0; x < 16; x++) {
+      int i = y*16+x;
+
+      Vertices_t mcnk_vtx, mcnk_norm;
+      Indices32_t mcnk_idx;
+      McnkChunk_s &mcnk = *(mcnks_[i]);
+
+      mcnk.mcvt.GetIndices(&mcnk_idx);
+      mcnk.mcvt.GetVertices(&mcnk_vtx);
+      mcnk.mcnr.GetNormals(&mcnk_norm);
+
+      // mark holes
+      for (int hy = 0; hy < 8; hy++) {
+        for (int hx = 0; hx < 8; hx++) {
+          // if hole is found mark all indices (12 of them) with uint max
+          if(mcnk.holes & (1 << (hy/2 * 4 + hx/2))) {
+            int cur_hi = hy*8*12 + hx*12;
+            for (int hi = 0; hi < 12; hi++) {
+              mcnk_idx[cur_hi+hi] = -1;
+            }
+          }
+        }
+      }
+
+      // translate mcnk vertices to correctly position them next to each other
+      Vec3_t mcnk_pos(TU*16*x, mcnk.position.z, TU*16*y);
+      TranslateVertices(mcnk_pos, &mcnk_vtx, 0, mcnk_vtx.size());
+
+      // merge all geometry information
+      InsertIndices(mcnk_idx, vtx.size(), &idx);
+      vtx.insert(vtx.end(), mcnk_vtx.begin(), mcnk_vtx.end());
+      norm.insert(norm.end(), mcnk_norm.begin(), mcnk_norm.end());
+    }
   }
 
-  // STEP 1: Find all water cells in a terrain. Water is usually above terrain ;)
-  //         so we just have to remove every terrain cell covered by water.
+  // Find all water cells in a terrain. Water is usually above terrain ;)
+  // so we just have to remove every terrain cell covered by water.
 
   // The concept behind all these nested loops is quite easy:
   // The first two loops will cycle through our 16*16 = 256 map chunks ..
@@ -108,64 +132,27 @@ void Adt_c::BuildTerrain(bool removeWet) {
       }
     }
   } else {
-    col.insert(col.end(), vtx.size(), 0xff127e14); // ABGR
+    RearrangeBuffers(&idx, &vtx, &norm);
+    mesh->SetColors(&Colors_t(vtx.size(), 0xff127e14)); // ABGR
+    mesh->SetGeometry(&idx, &vtx, &norm);
     return;
   }
 
-  // STEP 2: We have to remap indices and remove unecessary vertices
-  //         corresponding to the indices we remove.
-  //         Example:
-  //          - Former index was 345, now its 0: idx_map[354] = 0;
-  //          - Everytime former index 345 comes up we redirect it to 0
-  //          - And everytime an index in idx_map is -1, push new vertex and
-  //            assign idx_map[old_index] = dry_count;
-  int dry_size = idx.size()-wet_num;  // how many indices are dry ones
-
-  Indices32_t idx_map(idx.size(), 0xffffffff);    // indices remapped
-  Indices32_t dry_idx(dry_size);                  // dry indices
-  Indices32_t::iterator dry_it = dry_idx.begin();
-
-  Points_t dry_vtx, dry_norm; // dry vertices and normals
-
   // this will mark all remaining terrain below ocean level (heigth=0)
   for (uint32_t i = 0; i < idx.size(); i++) {
-    if (vtx[idx[i]].y < 0) {
+    if (vtx[idx[i]].y <= 0) {
       idx[(i/3)*3+0] = -1;
       idx[(i/3)*3+1] = -1;
       idx[(i/3)*3+2] = -1;
     }
   }
 
-  int dry_count = 0;
-  for (Indices32_t::iterator marked_terr = idx.begin();
-       marked_terr != idx.end();
-       ++marked_terr) {
-    uint32_t marked_terrain = *marked_terr;
-    // check if index is marked/wet
-    if (marked_terrain != 0xffffffff) {
-      // if not check for an already new index in the index map
-      if (idx_map[marked_terrain] == 0xffffffff) {
-        // we have a new index so map the new value and insert vtx and norms
-        idx_map[*marked_terr] = dry_count;
-        dry_vtx.push_back(vtx[marked_terrain]);
-        dry_norm.push_back(norm[marked_terrain]);
-        dry_count++;
-      }
-      // assign mapped index value to new index array
-      *dry_it = idx_map[marked_terrain];
-      ++dry_it;
-    }
-  }
-
-  // assign cleaned up terrain
-  vtx.swap(dry_vtx);
-  norm.swap(dry_norm);
-  idx.swap(dry_idx);
-  col.insert(col.end(), vtx.size(), 0xff127e14); // ABGR
+  RearrangeBuffers(&idx, &vtx, &norm);
+  mesh->SetColors(&Colors_t(vtx.size(), 0xff127e14)); // ABGR
+  mesh->SetGeometry(&idx, &vtx, &norm);
 }
 
-void Adt_c::ParseDoodads(MpqHandler_c &mpq_h, bool useCollisionModel) {
-
+void Adt_c::LoadDoodads(MpqHandler_c &mpq_h, bool loadSkin) {
   for (McnkChunks_t::iterator mcnk = mcnks_.begin();
        mcnk != mcnks_.end();
        ++mcnk) {
@@ -174,123 +161,137 @@ void Adt_c::ParseDoodads(MpqHandler_c &mpq_h, bool useCollisionModel) {
          ++off) {
       const MddfChunk_s::DoodadInfo_s &info = mddf_.doodad_infos.at(*off);
       // check if obj with unique id has already been placed
-      if (CheckUid(info.uid)) { continue; }
-
-      std::string filename(mmdx_.m2_names.c_str()+mmid_.name_offs.at(info.id));
+      if (UidAlreadyIn(info.uid)) { continue; }
 
       // replace false extensions with right one
+      std::string filename(mmdx_.m2_names.c_str()+mmid_.name_offs.at(info.id));
       RreplaceWoWExt(ToLower(filename), ".mdx", ".m2", &filename);
 
-      m2s_.push_back(Mesh_s());
-      Mesh_s &m2_mesh = m2s_.back();
+      doodads_.push_back(AdtDoodad_s());
+      AdtDoodad_s &doodad = doodads_.back();
 
       // use collision (bounding volume) models or not
-      M2_c *m2 = GetM2(mpq_h, filename, !useCollisionModel);
-      if (useCollisionModel) {
-        m2->GetBVMesh(&m2_mesh);
-      } else {
-        m2->GetMesh(*m2->skin, &m2_mesh);
-      }
-      TransWoWToRH(info.position, info.orientation, 1.0f, &m2_mesh.vtx);
+      doodad.m2 = GetM2(mpq_h, filename, loadSkin);
+      doodad.info = &info;
     }
   }
 }
 
+void Adt_c::GetDoodads(Meshes_t *meshes) {
+   for (AdtDoodads_t::iterator doodad = doodads_.begin();
+       doodad != doodads_.end();
+       ++doodad) {
+    const MddfChunk_s::DoodadInfo_s &info = *doodad->info;
+    const M2_c *m2 = doodad->m2;
+
+    // add new doodad
+    meshes->push_back(Mesh_c());
+    Mesh_c *mesh = &meshes->back();
+
+    // if we have a skin we get the real mesh
+    if(m2->skin.get() != NULL) {
+      m2->GetMesh(*m2->skin, mesh);
+    } else {
+      m2->GetBVMesh(mesh);
+    }
+
+    // don't forget to readjust positions and rotations!
+    mesh->SetPositon(Vec3_t(info.pos.x-17066.666666f, info.pos.y, info.pos.z-17066.666666f));
+    mesh->SetRotation(Vec3_t(-info.rot.x, info.rot.y-90, info.rot.z-90));
+    mesh->SetScale(info.scale/1024.0f);
+  }
+}
+
 M2_c* Adt_c::GetM2(MpqHandler_c &mpq_h, const std::string &filename, bool loadSkin) {
-  // check if m2 with filename is in our map
+  // check if m2 is already in our map
   ModelMap_t::iterator found = model_map_.find(filename);
   if (found != model_map_.end()) {
     return reinterpret_cast<M2_c*>(found->second);
   } else {
-    Buffer_t m2_buf;
     // not in map, so load it
-    mpq_h.LoadFile(filename.c_str(), &m2_buf);
-    if (!m2_buf.size()) {
-      std::cout << filename << std::endl;
-      return NULL;
-    }
-
+    Buffer_t buf;
+    mpq_h.LoadFile(filename.c_str(), &buf);
     // create new entry in map
-    M2_c *m2 = new M2_c(&m2_buf);
+    M2_c *m2 = new M2_c(&buf);
     model_map_.insert(ModelPair_t(filename, m2));
 
     if (loadSkin) {
-      std::string skin_name(ToLower(filename));
-      RreplaceWoWExt(skin_name, ".m2", "00.skin", &skin_name);
-
-      Buffer_t skin_buf;
-      mpq_h.LoadFile(skin_name.c_str(), &skin_buf);
-      Skin_c *skin = new Skin_c(&skin_buf);
-      m2->skin = skin;
+      std::string skin_name(filename);
+      RreplaceWoWExt(ToLower(skin_name), ".m2", "00.skin", &skin_name);
+      // load skin
+      mpq_h.LoadFile(skin_name.c_str(), &buf);
+      m2->skin = Skin_p(new Skin_c(&buf));
     }
 
     return m2;
   }
 }
 
-void Adt_c::ParseWmos(MpqHandler_c &mpq_h) {
-  /*ModfChunk_s &modf = mhdr_.modf;
-  MwidChunk_s &mwid = mhdr_.mwid;
-  MwmoChunk_s &mwmo = mhdr_.mwmo;
-
-  for (ModfChunk_s::WmoInfo_t::iterator wmo_info = modf.wmo_info.begin();
-       wmo_info != modf.wmo_info.end();
+void Adt_c::LoadWmos(MpqHandler_c &mpq_h, bool loadSkin) {
+  for (ModfChunk_s::WmoInfos_t::iterator wmo_info = modf_.wmo_infos.begin();
+       wmo_info != modf_.wmo_infos.end();
        ++wmo_info) {
-    // check if object with unique id has already been placed in our world
-    Indices32_t::iterator found;
-    found = std::find(obj_uids_.begin(), obj_uids_.end(), wmo_info->uid);
-    if (found != obj_uids_.end()) { continue; }
-    obj_uids_.push_back(wmo_info->uid);
+    // check if obj with unique id has already been placed
+    if (UidAlreadyIn(wmo_info->uid)) { continue; }
 
-    // get wmo filename
+    // replace false extensions with right one
     std::string filename;
-    filename = mwmo.wmo_names.c_str()+mwid.name_offsets.at(wmo_info->id);
-    Wmo_c *wmo = GetWmo(mpq_h, filename);
+    filename = mwmo_.wmo_names.c_str()+mwid_.name_offs.at(wmo_info->id);
 
-    // create new wmo
-    wmos_.push_back(Mesh_s());
-    Mesh_s &wmo_mesh = wmos_.back();
+    wmos_.push_back(Wmo_s());
+    Wmo_s &wmo = wmos_.back();
 
-    const Points_t &vtx = wmo->vertices();
-    const Points_t &norm = wmo->normals();
-    const Indices32_t &idx = wmo->indices();
-    const Indices32_t &col = wmo->colors();
-
-    wmo_mesh.vtx.assign(vtx.begin(), vtx.end());
-    TransWoWToRH(wmo_info->position, wmo_info->orientation, 1.0f, &wmo_mesh.vtx);
-
-    wmo_mesh.idx.assign(idx.begin(), idx.end());
-    wmo_mesh.norm.assign(norm.begin(), norm.end());
-    wmo_mesh.col.assign(col.begin(), col.end());
-  }*/
+    wmo.wmo = GetWmo(mpq_h, filename, loadSkin);
+    wmo.info = &(*wmo_info);
+  }
 }
 
-/*Wmo_c* Adt_c::GetWmo(MpqHandler_c &mpq_h, const std::string &filename) {
-  // check if wmo with filename is in our map ..
+Wmo_c* Adt_c::GetWmo(MpqHandler_c &mpq_h, const std::string &filename, bool loadSkin) {
+  // check if wmo is already in our map
   ModelMap_t::iterator found = model_map_.find(filename);
   if (found != model_map_.end()) {
     return reinterpret_cast<Wmo_c*>(found->second);
   } else {
-    Buffer_t wmo_buf;
-    // .. not in map, so load it
-    mpq_h.LoadFile(filename.c_str(), &wmo_buf);
-
-    // init wmo and create new entry in map
-    Wmo_c *wmo = new Wmo_c(&wmo_buf, filename, mpq_h);
+    // not in map, so load it
+    Buffer_t buf;
+    mpq_h.LoadFile(filename.c_str(), &buf);
+    // create new entry in map
+    Wmo_c *wmo = new Wmo_c(&buf, filename, &model_map_);
     model_map_.insert(ModelPair_t(filename, wmo));
+    wmo->LoadWmo(mpq_h);
+    wmo->LoadDoodads(mpq_h, loadSkin);
+
     return wmo;
   }
-}*/
+}
 
-bool Adt_c::CheckUid(uint32_t uid) const {
+void Adt_c::GetWmos(Meshes_t *wmos, Meshes_t *doodads) const {
+  for (Wmos_t::const_iterator wmo = wmos_.begin();
+       wmo != wmos_.end();
+       ++wmo) {
+    const ModfChunk_s::WmoInfo_s &info = *wmo->info;
+
+    // add new wmo
+    wmos->push_back(Mesh_c());
+    Mesh_c *wmo_mesh = &wmos->back();
+    // don't forget to readjust positions and rotations!
+    wmo_mesh->SetPositon(Vec3_t(info.pos.x-17066.666666f, info.pos.y, info.pos.z-17066.666666f));
+    wmo_mesh->SetRotation(Vec3_t(-info.rot.x, info.rot.y-90, info.rot.z-90));
+
+    wmo->wmo->GetWmo(wmo_mesh);
+    wmo->wmo->GetDoodads(doodads, wmo_mesh);
+  }
+}
+
+bool Adt_c::UidAlreadyIn(uint32_t uid) const {
   Indices32_t::iterator found;
-  found = std::find(obj_uids_.begin(), obj_uids_.end(), uid);
+  found = std::find(obj_uids_->begin(), obj_uids_->end(), uid);
   // find unique identifier ..
-  if (found != obj_uids_.end()) {
+  if (found != obj_uids_->end()) {
     return true;
   } else {
     // .. push new uid cause we didn't see it until now
-    obj_uids_.push_back(uid);
+    obj_uids_->push_back(uid);
     return false;
   }
 }
@@ -298,8 +299,6 @@ bool Adt_c::CheckUid(uint32_t uid) const {
 /*void Adt_c::BuildWater() {
   Mh2oChunk_s &mh2o = mhdr_.mh2o;
   if (mh2o.heights.size() <= 0) return;
-
-
 
   for (int y = 0; y < 16; y++) {
     for (int x = 0; x < 16; x++) {

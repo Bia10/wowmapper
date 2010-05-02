@@ -1,6 +1,6 @@
 #include "mpqhandler_c.h"
 
-MpqHandler_c::MpqHandler_c(const char *searchDir)
+MpqHandler_c::MpqHandler_c(const std::string &searchDir)
     : search_dir_(searchDir) {
   GetMpqs();
 }
@@ -13,10 +13,9 @@ MpqHandler_c::~MpqHandler_c() {
   }
 }
 
-int32_t MpqHandler_c::OpenMpq(const char *filename) {
+int32_t MpqHandler_c::OpenMpq(const std::string &filename) {
   // construct path from default directory and filename
-  std::string mpq_path(search_dir_);
-  mpq_path.append(std::string("/") + filename);
+  std::string mpq_path(search_dir_ + "/" + filename);
 
   int32_t err = 0;
   uint8_t *buf = NULL;
@@ -76,7 +75,7 @@ int32_t MpqHandler_c::OpenMpq(const char *filename) {
 void MpqHandler_c::GetMpqs() {
   DIR *dir = opendir(search_dir_.c_str());
 
-  Filenames_t mpq_names;
+  Strings_t mpq_names;
   // list everything what's in the search dir and open mpq if we find one
   for (dirent *dir_entry = readdir(dir); dir_entry; dir_entry = readdir(dir)) {
     std::string cur_name(dir_entry->d_name);
@@ -90,7 +89,7 @@ void MpqHandler_c::GetMpqs() {
 
   std::sort(mpq_names.begin(), mpq_names.end());
 
-  for (Filenames_t::reverse_iterator mpq_name = mpq_names.rbegin();
+  for (Strings_t::reverse_iterator mpq_name = mpq_names.rbegin();
        mpq_name != mpq_names.rend();
        ++mpq_name) {
     OpenMpq(mpq_name->c_str());
@@ -102,7 +101,7 @@ void MpqHandler_c::GetMpqs() {
   closedir(dir);
 }
 
-bool MpqHandler_c::LoadFile(const char *filename, Buffer_t *buffer) const {
+bool MpqHandler_c::LoadFile(const std::string &filename, Buffer_t *buffer) const {
   int64_t unpacked = 0;
   int64_t bytes = 0;
   uint32_t file_num = 0;
@@ -111,7 +110,7 @@ bool MpqHandler_c::LoadFile(const char *filename, Buffer_t *buffer) const {
 
   if (wow_file != wow_file_map_.end()) {
     mpq_archive_s *mpq_arc = wow_file->second;
-    libmpq__file_number(mpq_arc, filename, &file_num);
+    libmpq__file_number(mpq_arc, filename.c_str(), &file_num);
     libmpq__file_unpacked_size(mpq_arc, file_num, &unpacked);
 
     buffer->resize(unpacked);

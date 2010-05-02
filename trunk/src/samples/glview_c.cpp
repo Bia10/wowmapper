@@ -1,6 +1,6 @@
 #include "glview_c.h"
 
-Camera_c GlView_c::camera_(glm::vec3(2133.33f, 136.883f, 9066.67f));
+Camera_c GlView_c::camera_(glm::vec3(0, 0, 0));
 uint32_t GlView_c::indices_;
 
 GlView_c::GlView_c(int32_t width, int32_t height, const char *title)
@@ -37,22 +37,18 @@ void GlView_c::Initialize(uint32_t indices) {
 }
 
 void GlView_c::SetLight() {
-  glShadeModel(GL_SMOOTH);
-
   // Create light components
-  GLfloat ambientLight[] = { 0.2f, 0.2f, 0.2f, 0.5f };
-  GLfloat diffuseLight[] = { 0.8f, 0.8f, 0.8, 0.5f };
-  GLfloat specularLight[] = { 0.5f, 0.5f, 0.5f, 0.2f };
-  GLfloat position[] = { -100.0f, 10000.0f, 0, 1.0f };
+  GLfloat ambientLight[] = { 0.2f, 0.2f, 0.2f };
+  GLfloat diffuseLight[] = { 0.5f, 0.5f, 0.5f };
+  GLfloat specularLight[] = { 1.0f, 1.0f, 1.0f };
 
   // Assign created components to GL_LIGHT0
-  glLightfv(GL_LIGHT0, GL_AMBIENT, ambientLight);
+  /*glLightfv(GL_LIGHT0, GL_AMBIENT, ambientLight);
   glLightfv(GL_LIGHT0, GL_DIFFUSE, diffuseLight);
   glLightfv(GL_LIGHT0, GL_SPECULAR, specularLight);
-  glLightfv(GL_LIGHT0, GL_POSITION, position);
 
   glEnable(GL_LIGHTING);
-  glEnable(GL_LIGHT0);
+  glEnable(GL_LIGHT0);*/
 
   glEnable(GL_DEPTH_TEST);
   glDepthFunc(GL_LEQUAL);
@@ -72,8 +68,9 @@ void GlView_c::SetCallbacks() {
 void GlView_c::SetGlCapabilities() {
   glShadeModel(GL_SMOOTH);
   glEnable(GL_COLOR_MATERIAL);
-  //glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+  glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
   glEnable(GL_BLEND);
+  glEnable(GL_NORMALIZE);
   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
   glClearColor(0, 0, 0.1, 1.0f);
 }
@@ -82,15 +79,11 @@ void GlView_c::Render() {
   // buffer clear + pre-render setup
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
   glLoadIdentity();
-  gluPerspective(60, 4/3.0f, 1.0, 100000.0);
+  gluPerspective(60, 4/3.0, 1.0, 100000.0);
 
   const glm::vec3 &pos = camera_.position();
   const glm::vec3 &look = camera_.lookat();
   gluLookAt(pos.x, pos.y, pos.z, look.x, look.y, look.z, 0, 1, 0);
-
-  //GLfloat lpos[] = {pos.x, pos.y, pos.z, 1.0f};
-
-  //glLightfv(GL_LIGHT0, GL_POSITION, lpos);
 
   glEnableClientState(GL_VERTEX_ARRAY);
   glEnableClientState(GL_NORMAL_ARRAY);
@@ -107,10 +100,10 @@ void GlView_c::Render() {
   glutSwapBuffers();
 }
 
-void GlView_c::SetBuffers(const Points_t *vertices,
-                          const Points_t *normals,
-                          const Indices32_t *indices,
-                          const Indices32_t *colors) {
+void GlView_c::SetBuffers(const Indices32_t *indices,
+                          const Vertices_t *vertices,
+                          const Normals_t *normals,
+                          const Colors_t *colors) {
   uint32_t vbo_vtx_id;
   // generate and bind buffer
   glGenBuffersARB(1, &vbo_vtx_id);
@@ -174,7 +167,7 @@ void GlView_c::KeyboardCallback(uint8_t key, int x, int y) {
       camera_.SwimUp(+speed);
       break; }
     case 'h': {
-      speed = 1.0f;
+      speed = 0.5f;
       break; }
     case 'j': {
       speed = 10.0f;
