@@ -81,12 +81,9 @@ static std::string ToLower(const std::string &str) {
 
 static void TranslateVertices(const glm::vec3 &pos, Vertices_t *vertices,
                               off_t off, size_t num) {
-  // rotation
-  glm::vec3 transl(pos.x, pos.y, pos.z);
-
   // transform vertices
   for (size_t i = off; i < (off+num); i++) {
-    (*vertices)[i] += transl;
+    (*vertices)[i] += pos;
   }
 }
 
@@ -110,16 +107,6 @@ static void TransformVertices(const glm::vec3 &pos, const glm::vec3 &rot,
     glm::vec4 vtx4(vtx, 0);
     vtx4 = scale * rot_mtx * vtx4;
     vtx = glm::vec3(vtx4) + pos;
-  }
-}
-
-static void TransformVertices(const glm::vec3 &pos, const glm::quat &rot,
-                              float scale, Vertices_t *vertices,
-                              off_t off, size_t num) {
-  // transform vertices
-  for (size_t i = off; i < (off+num); i++) {
-    glm::vec3 &vtx = (*vertices)[i];
-    vtx = glm::gtx::quaternion::rotate(rot, vtx) * scale + pos;
   }
 }
 
