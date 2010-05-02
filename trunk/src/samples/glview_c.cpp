@@ -38,17 +38,19 @@ void GlView_c::Initialize(uint32_t indices) {
 
 void GlView_c::SetLight() {
   // Create light components
-  /*GLfloat ambientLight[] = { 0.2f, 0.2f, 0.2f };
-  GLfloat diffuseLight[] = { 0.5f, 0.5f, 0.5f };
-  GLfloat specularLight[] = { 1.0f, 1.0f, 1.0f };
+  GLfloat ambientLight[] = { 0.2f, 0.2f, 0.2f, 0.5f };
+  GLfloat diffuseLight[] = { 0.8f, 0.8f, 0.8, 0.5f };
+  GLfloat specularLight[] = { 0.5f, 0.5f, 0.5f, 0.2f };
+  GLfloat position[] = { -100.0f, 10000.0f, 0, 1.0f };
 
   // Assign created components to GL_LIGHT0
   glLightfv(GL_LIGHT0, GL_AMBIENT, ambientLight);
   glLightfv(GL_LIGHT0, GL_DIFFUSE, diffuseLight);
   glLightfv(GL_LIGHT0, GL_SPECULAR, specularLight);
+  glLightfv(GL_LIGHT0, GL_POSITION, position);
 
   glEnable(GL_LIGHTING);
-  glEnable(GL_LIGHT0);*/
+  glEnable(GL_LIGHT0);
 
   glEnable(GL_DEPTH_TEST);
   glDepthFunc(GL_LEQUAL);
@@ -68,9 +70,9 @@ void GlView_c::SetCallbacks() {
 void GlView_c::SetGlCapabilities() {
   glShadeModel(GL_SMOOTH);
   glEnable(GL_COLOR_MATERIAL);
-  glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+  //glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
   glEnable(GL_BLEND);
-  glEnable(GL_NORMALIZE);
+  //glEnable(GL_NORMALIZE);
   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
   glClearColor(0, 0, 0.1, 1.0f);
 }
