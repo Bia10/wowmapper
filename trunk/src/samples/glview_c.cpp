@@ -41,7 +41,7 @@ void GlView_c::SetLight() {
   GLfloat ambientLight[] = { 0.2f, 0.2f, 0.2f, 0.5f };
   GLfloat diffuseLight[] = { 0.8f, 0.8f, 0.8, 0.5f };
   GLfloat specularLight[] = { 0.5f, 0.5f, 0.5f, 0.2f };
-  GLfloat position[] = { -100.0f, 10000.0f, 0, 1.0f };
+  GLfloat position[] = { -100.0f, 1000.0f, 0, 1.0f };
 
   // Assign created components to GL_LIGHT0
   glLightfv(GL_LIGHT0, GL_AMBIENT, ambientLight);
