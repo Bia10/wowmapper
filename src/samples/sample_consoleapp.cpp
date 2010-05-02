@@ -63,7 +63,7 @@ int main(int argc, char **argv) {
 
 	// some statistics output
 	float time_needed = float(clock() - start) / CLOCKS_PER_SEC;
-	std::cout << num_adts << " loaded in" << time_needed << " sec" << std::endl;
+	std::cout << num_adts << " loaded in " << time_needed << " sec" << std::endl;
 	std::cout << num_adts / time_needed << " ADTs per sec" << std::endl;
 
 	Adt_c::CleanUp(); // buffered models
