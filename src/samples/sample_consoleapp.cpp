@@ -9,6 +9,11 @@ void MergeMeshes(const Meshes_t &meshes, Mesh_c *finalMesh);
 // maps. Console input would look like this:
 // Prototype:  sample_consoleapp  DIR  WDT_DIR  ADT_OFFSET  ADT_NUM
 //    -> ./sample_consoleapp . World\\maps\\Azeroth\\Azeroth 256 64
+// Controls:
+//  - look: mouse left click (drag)
+//  - move: w, a, s, d
+//  - up/down: e, q
+//  - speed: h, j, k
 
 int main(int argc, char **argv) {
   std::string mpq_dir(argv[1]);   // retrieve mpq directory if
