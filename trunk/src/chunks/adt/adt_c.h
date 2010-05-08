@@ -40,60 +40,67 @@ typedef std::list<Wmo_s> Wmos_t;
  *         all information like terrain heightmap, water, wmos, m2, etc. */
 class Adt_c : public Chunk_c {
  public:
-	Adt_c(Buffer_t *buffer, Indices32_t *obj_uids);
+  /*! \brief ADT constructor taking a buffer and an index vector to manage UIDs.
+   *  \param buffer Buffer provided by an mpq handler.
+   *  \param objUids Unique identifiers for adt wmos and doodads. */
+	Adt_c(Buffer_t *buffer, Indices32_t *objUids);
 	virtual ~Adt_c();
-
+	/*! \brief IMPORTANT!: You have to call this function at the end to cleanup buffered models! */
 	static void CleanUp();
-
 	/*! \brief Builds terrain geometry.
-   *  \param removeWet Removes terrain vertices covered by water. */
+   *  \param removeWet Removes terrain vertices covered by water.
+   *  \param mesh Mesh where is put. */
   void BuildTerrain(bool removeWet, Mesh_c *mesh);
   /*! \brief Retrieve M2 models referenced by ADTs.
-   *  \param mpq_h MPQ handler to load M2 files from MPQs.
+   *  \param mpqH MPQ handler to load M2 files from MPQs.
    *  \param loadSkin False -> use collision model, true -> real model. */
-  void LoadDoodads(MpqHandler_c &mpq_h, bool loadSkin);
-  void LoadWmos(MpqHandler_c &mpq_h, bool loadSkin);
-
+  void LoadDoodads(MpqHandler_c &mpqH, bool loadSkin);
+  /*! \brief Tells the adt to load WMOs.
+   *  \param mpqH MPQ handler to load WMO files from MPQs.
+   *  \param loadSkin Here loadSkin refers to doodads inside wmos. */
+  void LoadWmos(MpqHandler_c &mpqH, bool loadSkin);
+  /*! \brief Returns terrain doodads as a vector of meshes. */
   void GetDoodads(Meshes_t *meshes);
+  /*! \brief Returns terrain doodads as a vector of meshes. */
   void GetWmos(Meshes_t *wmos, Meshes_t *doodads) const;
 
-
  private:
+  /*! \brief Initialize MCNKs. */
+  void InitMcnks();
 	/*! \brief Checks if an UID already exists.
 	 *  \param uid UID to check.
 	 *  \return Returns true if UID already exists.
 	 *  \remark If UID doesnt exist it gets added to the list of UIDs. */
 	bool UidAlreadyIn(uint32_t uid) const;
 	/*! \brief Returns a M2 model from the buffer or loads it if not yet in buffer.
-	 *  \param mpq_h MPQ handler.
+	 *  \param mpqH MPQ handler.
 	 *  \param filename M2 filename.
 	 *  \param loadSkin True, load skin for m2. False, use bounding volume.
 	 *  \return Returns a M2 model. */
-	M2_c* GetM2(MpqHandler_c &mpq_h, const std::string &filename, bool loadSkin);
+	M2_c* GetM2(MpqHandler_c &mpqH, const std::string &filename, bool loadSkin);
 	/*! \brief Same behavior as GetM2.
-	 *  \param mpq_h MPQ handler.
+	 *  \param mpqH MPQ handler.
    *  \param filename M2 filename.
    *  \param loadSkin True, load skin for m2. False, use bounding volume.
    *  \return Returns a WMO model. */
-	Wmo_c* GetWmo(MpqHandler_c &mpq_h, const std::string &filename, bool loadSkin);
-	void InitMcnks();
+	Wmo_c* GetWmo(MpqHandler_c &mpqH, const std::string &filename, bool loadSkin);
 
 	Indices32_t *obj_uids_;
 
-	MhdrChunk_s mhdr_;                //!< MHDR chunk
-	McinChunk_s mcin_;                //!< map chunks
-  MmdxChunk_s mmdx_;                //!< model filenames
-  MmidChunk_s mmid_;                //!< model ids (offsets to filenames)
-  MwmoChunk_s mwmo_;                //!< wmo filenames
-  MwidChunk_s mwid_;                //!< wmo ids (offsets to filenames)
-  MddfChunk_s mddf_;                //!< doodad information
-  ModfChunk_s modf_;                //!< wmo information
-  Mh2oChunk_p mh2o_;                //!< water information
+	MhdrChunk_s mhdr_;            //!< MHDR chunk
+	McinChunk_s mcin_;            //!< map chunks
+  MmdxChunk_s mmdx_;            //!< model filenames
+  MmidChunk_s mmid_;            //!< model ids (offsets to filenames)
+  MwmoChunk_s mwmo_;            //!< wmo filenames
+  MwidChunk_s mwid_;            //!< wmo ids (offsets to filenames)
+  MddfChunk_s mddf_;            //!< doodad information
+  ModfChunk_s modf_;            //!< wmo information
+  Mh2oChunk_p mh2o_;            //!< water information
 
   AdtDoodads_t doodads_;
   Wmos_t wmos_;
 
   McnkChunks_t mcnks_;
 
-	static ModelMap_t model_map_;  //!< model map to buffer already loaded models
+	static ModelMap_t model_map_; //!< model map to buffer already loaded models
 };

@@ -2,9 +2,9 @@
 
 ModelMap_t Adt_c::model_map_;
 
-Adt_c::Adt_c(Buffer_t *buffer, Indices32_t *obj_uids)
+Adt_c::Adt_c(Buffer_t *buffer, Indices32_t *objUids)
     : Chunk_c(buffer),
-      obj_uids_(obj_uids),
+      obj_uids_(objUids),
       mhdr_(this, 0xc),
       mcin_(this, mhdr_.mcin_off),
       mmdx_(this, mhdr_.mmdx_off),
@@ -138,7 +138,7 @@ void Adt_c::BuildTerrain(bool removeWet, Mesh_c *mesh) {
   mesh->SetGeometry(&idx, &vtx, &norm);
 }
 
-void Adt_c::LoadDoodads(MpqHandler_c &mpq_h, bool loadSkin) {
+void Adt_c::LoadDoodads(MpqHandler_c &mpqH, bool loadSkin) {
   for (McnkChunks_t::iterator mcnk = mcnks_.begin();
        mcnk != mcnks_.end();
        ++mcnk) {
@@ -157,7 +157,7 @@ void Adt_c::LoadDoodads(MpqHandler_c &mpq_h, bool loadSkin) {
       AdtDoodad_s &doodad = doodads_.back();
 
       // use collision (bounding volume) models or not
-      doodad.m2 = GetM2(mpq_h, filename, loadSkin);
+      doodad.m2 = GetM2(mpqH, filename, loadSkin);
       doodad.info = &info;
     }
   }
@@ -188,7 +188,7 @@ void Adt_c::GetDoodads(Meshes_t *meshes) {
   }
 }
 
-M2_c* Adt_c::GetM2(MpqHandler_c &mpq_h, const std::string &filename, bool loadSkin) {
+M2_c* Adt_c::GetM2(MpqHandler_c &mpqH, const std::string &filename, bool loadSkin) {
   // check if m2 is already in our map
   ModelMap_t::iterator found = model_map_.find(filename);
   if (found != model_map_.end()) {
@@ -196,7 +196,7 @@ M2_c* Adt_c::GetM2(MpqHandler_c &mpq_h, const std::string &filename, bool loadSk
   } else {
     // not in map, so load it
     Buffer_t buf;
-    mpq_h.LoadFile(filename.c_str(), &buf);
+    mpqH.LoadFile(filename.c_str(), &buf);
     // create new entry in map
     M2_c *m2 = new M2_c(&buf);
     model_map_.insert(ModelPair_t(filename, m2));
@@ -205,7 +205,7 @@ M2_c* Adt_c::GetM2(MpqHandler_c &mpq_h, const std::string &filename, bool loadSk
       std::string skin_name(filename);
       RreplaceWoWExt(ToLower(skin_name), ".m2", "00.skin", &skin_name);
       // load skin
-      mpq_h.LoadFile(skin_name.c_str(), &buf);
+      mpqH.LoadFile(skin_name.c_str(), &buf);
       m2->skin = Skin_p(new Skin_c(&buf));
     }
 
@@ -220,19 +220,20 @@ void Adt_c::LoadWmos(MpqHandler_c &mpq_h, bool loadSkin) {
     // check if obj with unique id has already been placed
     if (UidAlreadyIn(wmo_info->uid)) { continue; }
 
-    // replace false extensions with right one
     std::string filename;
     filename = mwmo_.wmo_names.c_str()+mwid_.name_offs.at(wmo_info->id);
 
+    // add wmo to array
     wmos_.push_back(Wmo_s());
     Wmo_s &wmo = wmos_.back();
 
+    // assign information
     wmo.wmo = GetWmo(mpq_h, filename, loadSkin);
     wmo.info = &(*wmo_info);
   }
 }
 
-Wmo_c* Adt_c::GetWmo(MpqHandler_c &mpq_h, const std::string &filename, bool loadSkin) {
+Wmo_c* Adt_c::GetWmo(MpqHandler_c &mpqH, const std::string &filename, bool loadSkin) {
   // check if wmo is already in our map
   ModelMap_t::iterator found = model_map_.find(filename);
   if (found != model_map_.end()) {
@@ -240,12 +241,12 @@ Wmo_c* Adt_c::GetWmo(MpqHandler_c &mpq_h, const std::string &filename, bool load
   } else {
     // not in map, so load it
     Buffer_t buf;
-    mpq_h.LoadFile(filename.c_str(), &buf);
+    mpqH.LoadFile(filename.c_str(), &buf);
     // create new entry in map
     Wmo_c *wmo = new Wmo_c(&buf, filename, &model_map_);
     model_map_.insert(ModelPair_t(filename, wmo));
-    wmo->LoadWmo(mpq_h);
-    wmo->LoadDoodads(mpq_h, loadSkin);
+    wmo->LoadWmo(mpqH);
+    wmo->LoadDoodads(mpqH, loadSkin);
 
     return wmo;
   }
