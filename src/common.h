@@ -9,7 +9,6 @@
 #include <exception>
 #include <memory>
 #include <iterator>
-#include <bitset>
 #include <sstream>
 #include <fstream>
 #include <float.h>
@@ -58,7 +57,7 @@ static void InsertIndices(const std::vector<T> &ins, T offset, std::vector<T> *o
   out->insert(out->end(), ins_cpy.begin(), ins_cpy.end());
 }
 
-/*! \brief Used to replace WoWs extensions on files (cause some or wrong). */
+/*! \brief Used to replace WoWs extensions on files (cause some or wrong!!!). */
 static bool RreplaceWoWExt(const std::string &in, const std::string &old,
                         const std::string &rep, std::string *out) {
   size_t last_bslash = in.rfind('\\');  // used to fix a single file: meatwagonhauler!
