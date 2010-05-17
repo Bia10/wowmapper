@@ -42,11 +42,10 @@ class Adt_c : public Chunk_c {
  public:
   /*! \brief ADT constructor taking a buffer and an index vector to manage UIDs.
    *  \param buffer Buffer provided by an mpq handler.
-   *  \param objUids Unique identifiers for adt wmos and doodads. */
-	Adt_c(Buffer_t *buffer, Indices32_t *objUids);
+   *  \param objUids Unique identifiers for adt wmos and doodads.
+   *  \param modelMap Used as a buffer for already loaded models. */
+	Adt_c(Buffer_t *buffer, Indices32_t *objUids, ModelMap_t *modelMap);
 	virtual ~Adt_c();
-	/*! \brief IMPORTANT!: You have to call this function at the end to cleanup buffered models! */
-	static void CleanUp();
 	/*! \brief Builds terrain geometry.
    *  \param removeWet Removes terrain vertices covered by water.
    *  \param mesh Mesh where is put. */
@@ -86,21 +85,20 @@ class Adt_c : public Chunk_c {
 	Wmo_c* GetWmo(MpqHandler_c &mpqH, const std::string &filename, bool loadSkin);
 
 	Indices32_t *obj_uids_;
+	ModelMap_t *model_map_;  //!< model map to buffer already loaded models
 
-	MhdrChunk_s mhdr_;            //!< MHDR chunk
-	McinChunk_s mcin_;            //!< map chunks
-  MmdxChunk_s mmdx_;            //!< model filenames
-  MmidChunk_s mmid_;            //!< model ids (offsets to filenames)
-  MwmoChunk_s mwmo_;            //!< wmo filenames
-  MwidChunk_s mwid_;            //!< wmo ids (offsets to filenames)
-  MddfChunk_s mddf_;            //!< doodad information
-  ModfChunk_s modf_;            //!< wmo information
-  Mh2oChunk_p mh2o_;            //!< water information
+	MhdrChunk_s mhdr_;       //!< MHDR chunk
+	McinChunk_s mcin_;       //!< map chunks
+  MmdxChunk_s mmdx_;       //!< model filenames
+  MmidChunk_s mmid_;       //!< model ids (offsets to filenames)
+  MwmoChunk_s mwmo_;       //!< wmo filenames
+  MwidChunk_s mwid_;       //!< wmo ids (offsets to filenames)
+  MddfChunk_s mddf_;       //!< doodad information
+  ModfChunk_s modf_;       //!< wmo information
+  Mh2oChunk_p mh2o_;       //!< water information
 
   AdtDoodads_t doodads_;
   Wmos_t wmos_;
 
   McnkChunks_t mcnks_;
-
-	static ModelMap_t model_map_; //!< model map to buffer already loaded models
 };

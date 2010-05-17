@@ -3,19 +3,17 @@
 #include "mphdchunk_s.h"
 #include "mainchunk_s.h"
 
-typedef std::list<std::string> NamesList_t;
-
 /*! \brief Used to read WDT files and retrieve ADTs. */
 class Wdt_c : public Chunk_c {
  public:
   Wdt_c(Buffer_t *buf, const std::string &name);
-  const NamesList_t& names() const { return names_; }
+  const AdtPos_t& adt_list() const { return list_; }
 
  private:
-  void GenerateAdtNames();
+  void GetList();
 
   std::string name_;
-  NamesList_t names_;
+  AdtPos_t list_;
 
   MphdChunk_s mphd_;
   MainChunk_s main_;

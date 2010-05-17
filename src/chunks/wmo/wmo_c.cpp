@@ -60,10 +60,22 @@ void Wmo_c::GetWmo(Mesh_c *mesh) const {
     Indices32_t idx((*sw)->indices().begin(), (*sw)->indices().end());
     InsertIndices(idx, vertices.size(), &indices);
 
+    // mark vertices with no collision for removal
+    /*const MopyChunk_s::MaterialInfos_t &mat_infos = (*sw)->mopy().mat_infos;
+    size_t off = vertices.size();
+    for (size_t i = 0; i < mat_infos.size(); i++) {
+      if(mat_infos[i].id & 0x2) {
+        indices[off+i*3+0] = 0xffffffff;
+        indices[off+i*3+1] = 0xffffffff;
+        indices[off+i*3+2] = 0xffffffff;
+      }
+    }*/
+
     vertices.insert(vertices.end(), (*sw)->vertices().begin(), (*sw)->vertices().end());
     normals.insert(normals.end(), (*sw)->normals().begin(), (*sw)->normals().end());
   }
 
+  //RearrangeBuffers(&indices, &vertices, &normals);
   mesh->SetColors(&Colors_t(vertices.size(), 0xff0066cc));
   mesh->SetGeometry(&indices, &vertices, &normals);
 }
@@ -109,7 +121,7 @@ void Wmo_c::LoadDoodads(MpqHandler_c &mpq_h, bool loadSkin) {
   }
 }
 
-void Wmo_c::GetDoodads(Meshes_t *meshes, Mesh_c *parent) const {
+void Wmo_c::GetDoodads(Meshes_t *meshes, const Vec3_t &pos, const Vec3_t &rot) const {
   for (WmoDoodads_t::const_iterator doodad = doodads_.begin();
        doodad != doodads_.end();
        ++doodad) {
@@ -128,12 +140,13 @@ void Wmo_c::GetDoodads(Meshes_t *meshes, Mesh_c *parent) const {
       m2->GetBVMesh(mesh);
     }
 
+    // have to transform wmo doodads first to align with their parent wmos
     Vertices_t vertices(mesh->vertices());
     TransformVertices(info->pos, info->rot, info->scale, &vertices, 0,
                       mesh->vertices().size());
 
     mesh->SetVertices(&vertices);
-    mesh->SetPositon(parent->position());
-    mesh->SetRotation(parent->rotation());
+    mesh->SetPositon(pos);
+    mesh->SetRotation(rot);
   }
 }

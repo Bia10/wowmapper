@@ -18,9 +18,9 @@ struct ModfChunk_s : public Chunk_c {
 
   WmoInfos_t wmo_infos;
 
-  ModfChunk_s(Chunk_c *parent, off_t off)
+  ModfChunk_s(Chunk_c *parent, wm_off_t off)
       : Chunk_c(parent, off) {
-    size_t num_infos = GetSize() / sizeof(WmoInfo_s);
+    wm_size_t num_infos = GetSize() / sizeof(WmoInfo_s);
     wmo_infos.resize(num_infos);
     CopyVector(GetBuffer(), GetCurOffset()+DATA_OFFSET, num_infos, &wmo_infos);
   }

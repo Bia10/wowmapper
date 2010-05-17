@@ -39,7 +39,7 @@ class Wmo_c : public Model_c {
   void LoadWmo(MpqHandler_c &mpq_h);
   void GetWmo(Mesh_c *mesh) const;
   void LoadDoodads(MpqHandler_c &mpq_h, bool loadSkin);
-  void GetDoodads(Meshes_t *meshes, Mesh_c *parent) const;
+  void GetDoodads(Meshes_t *meshes, const Vec3_t &pos, const Vec3_t &rot) const;
 
  private:
   M2_c* GetM2(MpqHandler_c &mpq_h, const std::string &filename, bool loadSkin);

@@ -34,7 +34,7 @@ void M2_c::GetBVMesh(Mesh_c *mesh) const {
 
   Normals_t new_norm(vertices.size());
 
-  for (size_t i = 0; i < indices.size()/3; i++) {
+  for (wm_size_t i = 0; i < indices.size()/3; i++) {
     new_norm[indices[i*3+0]] = normals[i];
     new_norm[indices[i*3+1]] = normals[i];
     new_norm[indices[i*3+2]] = normals[i];

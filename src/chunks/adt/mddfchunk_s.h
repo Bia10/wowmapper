@@ -16,9 +16,9 @@ struct MddfChunk_s : public Chunk_c {
 
   DoodadInfos_t doodad_infos;
 
-  MddfChunk_s(Chunk_c *parent, off_t off)
+  MddfChunk_s(Chunk_c *parent, wm_off_t off)
       : Chunk_c(parent, off) {
-    size_t num_doodads = GetValue<size_t>(0x0, SIZE_OFFSET) / sizeof(DoodadInfo_s);
+    wm_size_t num_doodads = GetValue<wm_size_t>(0x0, SIZE_OFFSET) / sizeof(DoodadInfo_s);
     doodad_infos.resize(num_doodads);
     CopyVector(GetBuffer(), GetCurOffset()+DATA_OFFSET, num_doodads, &doodad_infos);
   }

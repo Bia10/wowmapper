@@ -41,7 +41,7 @@ void GlView_c::SetLight() {
   GLfloat ambientLight[] = { 0.2f, 0.2f, 0.2f, 0.5f };
   GLfloat diffuseLight[] = { 0.8f, 0.8f, 0.8, 0.5f };
   GLfloat specularLight[] = { 0.5f, 0.5f, 0.5f, 0.2f };
-  GLfloat position[] = { -100.0f, 1000.0f, 0, 1.0f };
+  GLfloat position[] = { 0, 1000.0f, 0, 0.0f };
 
   // Assign created components to GL_LIGHT0
   glLightfv(GL_LIGHT0, GL_AMBIENT, ambientLight);
@@ -80,11 +80,20 @@ void GlView_c::SetGlCapabilities() {
 void GlView_c::Render() {
   // buffer clear + pre-render setup
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-  glLoadIdentity();
-  gluPerspective(60, 4/3.0, 1.0, 100000.0);
 
   const glm::vec3 &pos = camera_.position();
   const glm::vec3 &look = camera_.lookat();
+
+  glLoadIdentity();
+  gluPerspective(60, 4/3.0, 1.0, 100000.0);
+
+  std::cout << pos.x << " " << pos.y << " " << pos.z << std::endl;
+  char text[64];
+  glRasterPos2i(10, 10);
+  glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
+  sprintf(text, "%f %f %f", pos.x, pos.y, pos.z);
+  glutBitmapString(GLUT_BITMAP_HELVETICA_12, (unsigned char*)text);
+
   gluLookAt(pos.x, pos.y, pos.z, look.x, look.y, look.z, 0, 1, 0);
 
   glEnableClientState(GL_VERTEX_ARRAY);

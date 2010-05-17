@@ -6,7 +6,7 @@
 void MergeMeshes(const Meshes_t &meshes, Mesh_c *finalMesh);
 
 // This sample show you how to create a simple console app to display your
-// maps. Console input would look like this:
+// maps. Console input could look like this:
 // Prototype:  sample_consoleapp  DIR  WDT_DIR  ADT_OFFSET  ADT_NUM
 //    -> ./sample_consoleapp . World\\maps\\Azeroth\\Azeroth 256 64
 // Controls:
@@ -16,7 +16,7 @@ void MergeMeshes(const Meshes_t &meshes, Mesh_c *finalMesh);
 //  - speed: h, j, k
 
 int main(int argc, char **argv) {
-  std::string mpq_dir(argv[1]);   // retrieve mpq directory if
+  std::string mpq_dir(argv[1]);   // retrieve mpq directory
   std::string wdt_dir(argv[2]);   // retrieve wdt directory + wdt name (without extension *.wdt)
   int off_adt = atoi(argv[3]);    // adt offset into adt names list
   int num_adts = atoi(argv[4]);   // amount of adts to load
@@ -34,21 +34,22 @@ int main(int argc, char **argv) {
 	Wdt_c wdt(&file_buf, wdt_dir);
 
 	// get adt names list and jump to offset
-	NamesList_t::const_iterator name = wdt.names().begin();
-	for (int i=0;i<off_adt;i++) { ++name; }
+	AdtPos_t::const_iterator adt_pos = wdt.adt_list().begin();
+	for (int i=0;i<off_adt;i++) { ++adt_pos; }
 
 	// start clock
 	clock_t start = clock();
 
 	Indices32_t uids;        // unique identifiers to insert models only once
 	Meshes_t meshes;         // mesh vector
-	meshes.reserve(100000);  // IMPORTANT: reserve enough entries for ALL meshes
 
 	// start loading
-	for (int i = 0; i < num_adts; i++, ++name) {
-	  std::cout << i << ": " << *name << std::endl;
+	for (int i = 0; i < num_adts; i++, ++adt_pos) {
+	  std::stringstream ss;
+	  ss << wdt_dir << "_" << adt_pos->x << "_" << adt_pos->y << ".adt";
+	  std::cout << i << ": " << ss.str() << std::endl;
 	  // load file into buffer and pass it to adt
-	  mpq_h.LoadFile(*name, &file_buf);
+	  mpq_h.LoadFile(ss.str(), &file_buf);
 	  Adt_c adt(&file_buf, &uids);
 	  adt.LoadWmos(mpq_h, true);     // true == detailed mesh, not collision mesh
 	  adt.LoadDoodads(mpq_h, true);  // true == detailed mesh, not collision mesh
