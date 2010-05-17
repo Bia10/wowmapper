@@ -8,10 +8,10 @@ struct McrfChunk_s : public Chunk_c {
   Indices32_t wmo_offs;
 
 
-  McrfChunk_s(Chunk_c *parent, off_t off, size_t num_doodads, size_t num_wmos)
+  McrfChunk_s(Chunk_c *parent, wm_off_t off, wm_size_t num_doodads, wm_size_t num_wmos)
       : Chunk_c(parent, off) {
-    off_t ref_off = GetCurOffset() + DATA_OFFSET;
-    off_t wmo_off = ref_off+num_doodads*sizeof(uint32_t);
+    wm_off_t ref_off = GetCurOffset() + DATA_OFFSET;
+    wm_off_t wmo_off = ref_off+num_doodads*sizeof(uint32_t);
 
     doodad_offs.resize(num_doodads);
     wmo_offs.resize(num_wmos);

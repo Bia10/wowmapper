@@ -5,7 +5,7 @@
 /*! \brief MOGP: Map Object Group Information. */
 struct MogpChunk_s : public Chunk_c {
 
-  MogpChunk_s(Chunk_c *parent, off_t off)
+  MogpChunk_s(Chunk_c *parent, wm_off_t off)
       : Chunk_c(parent, off) {
 
   }

@@ -13,7 +13,14 @@ Mesh_c::~Mesh_c() {
 }
 
 void Mesh_c::CalcBoundingBox() {
-
+  for (wm_size_t i = 0; i < vertices_.size(); i++) {
+    bbox_.min.x = std::min(bbox_.min.x, vertices_[i].x);
+    bbox_.min.y = std::min(bbox_.min.y, vertices_[i].y);
+    bbox_.min.z = std::min(bbox_.min.z, vertices_[i].z);
+    bbox_.max.x = std::max(bbox_.max.x, vertices_[i].x);
+    bbox_.max.y = std::max(bbox_.max.y, vertices_[i].y);
+    bbox_.max.z = std::max(bbox_.max.z, vertices_[i].z);
+  }
 }
 
 void Mesh_c::SetName(const std::string &name) {
@@ -68,4 +75,8 @@ void Mesh_c::SetNormals(Normals_t *normals) {
 
 void Mesh_c::SetColors(Colors_t *colors) {
   colors_.swap(*colors);
+}
+
+void Mesh_c::SetBoundingBox(const BBox_s &bbox) {
+  bbox_ = bbox;
 }

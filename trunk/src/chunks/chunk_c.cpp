@@ -5,7 +5,7 @@ Chunk_c::Chunk_c(Buffer_t *buffer)
   buffer_.swap(*buffer);
 }
 
-Chunk_c::Chunk_c(Chunk_c *parent, off_t off)
+Chunk_c::Chunk_c(Chunk_c *parent, wm_off_t off)
     : parent_(parent), off_(off) {
 
 }
@@ -15,7 +15,7 @@ Chunk_c::~Chunk_c() {
 	off_ = 0;
 }
 
-off_t Chunk_c::GetCurOffset() const {
+wm_off_t Chunk_c::GetCurOffset() const {
   if (parent_ != NULL) {
     return parent_->GetCurOffset() + off_;
   }
@@ -29,11 +29,11 @@ const Buffer_t& Chunk_c::GetBuffer() const {
   return buffer_;
 }
 
-size_t Chunk_c::GetSize() const {
-  return GetValue<size_t>(0, SIZE_OFFSET);
+wm_size_t Chunk_c::GetSize() const {
+  return GetValue<wm_size_t>(0, SIZE_OFFSET);
 }
 
-off_t Chunk_c::GetOffsetToNext() const {
+wm_off_t Chunk_c::GetOffsetToNext() const {
   // +0x8 because header id and data size must be considered
   return GetCurOffset()+GetSize()+DATA_OFFSET;
 }

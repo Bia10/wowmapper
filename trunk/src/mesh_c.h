@@ -35,6 +35,7 @@ class Mesh_c {
   void SetVertices(Vertices_t *vertices);
   void SetNormals(Normals_t *normals);
   void SetColors(Colors_t *colors);
+  void SetBoundingBox(const BBox_s &bbox);
 
   // getter
   const std::string& name() const { return name_; }

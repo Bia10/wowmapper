@@ -13,7 +13,7 @@ struct MainChunk_s : public Chunk_c {
   MapTiles_t map_tiles;
 
 
-  MainChunk_s(Chunk_c *parent, off_t off)
+  MainChunk_s(Chunk_c *parent, wm_off_t off)
       : Chunk_c(parent, off), map_tiles(4096) {
     CopyVector(GetBuffer(), GetCurOffset()+DATA_OFFSET, 4096, &map_tiles);
   }

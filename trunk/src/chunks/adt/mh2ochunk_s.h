@@ -5,9 +5,9 @@
 /*! \brief MH2O: Map Chunk H2O (water). */
 struct Mh2oChunk_s : public Chunk_c {
   struct Mh2oHeader_s {
-    off_t info_off;
-    size_t num_layers;
-    off_t mask_off;
+    wm_off_t info_off;
+    wm_size_t num_layers;
+    wm_off_t mask_off;
   };
   typedef std::vector<Mh2oHeader_s> Mh2oHeaders_t;
 
@@ -20,8 +20,8 @@ struct Mh2oChunk_s : public Chunk_c {
     uint8_t y_offset;
     uint8_t width;
     uint8_t height;
-    off_t mask2_off;
-    off_t heightmap_off;
+    wm_off_t mask2_off;
+    wm_off_t heightmap_off;
   };
   typedef std::vector<Mh2oInfo_s> Mh2oInfos_t;
 
@@ -31,7 +31,7 @@ struct Mh2oChunk_s : public Chunk_c {
     Indices64_t masks;
     Mh2oInfos_t infos;
     Heightmaps_t heightmaps;
-    size_t num_layers;
+    wm_size_t num_layers;
   };
   typedef std::vector<Mh2oContent_s> Mh2oContent_t;
 
@@ -39,13 +39,13 @@ struct Mh2oChunk_s : public Chunk_c {
   Mh2oContent_t content;
 
 
-  Mh2oChunk_s(Chunk_c *parent, off_t off)
+  Mh2oChunk_s(Chunk_c *parent, wm_off_t off)
       : Chunk_c(parent, off), header(256), content(256) {
     CopyVector(GetBuffer(), GetCurOffset()+DATA_OFFSET, 256, &header);
 
     for (int i = 0; i < 256; i++) {
       // resize mh2o content arrays to fit the information
-      size_t num_layers = header[i].num_layers;
+      wm_size_t num_layers = header[i].num_layers;
       content[i].num_layers = num_layers;
       content[i].infos.resize(num_layers);
       content[i].masks.resize(num_layers);

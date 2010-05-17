@@ -19,7 +19,6 @@
 #include <string.h>
 #include <stdint.h>
 #include <time.h>
-#include <pthread.h>
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
@@ -28,11 +27,11 @@
 #include "types.h"
 
 
-#define TU 2.08333333333333f // Tile Units, 100.0f / (3.0f * 16.0f);
+#define TU 100.0f / (3.0f * 16.0f) // Tile Units
 
 struct BlockInfo_s {
-  uint32_t num;
-  uint32_t offset;
+  wm_size_t num;
+  wm_off_t offset;
 };
 
 // model map
@@ -46,7 +45,7 @@ typedef std::pair<std::string, Model_c*> ModelPair_t;
  *  \param offset Offset to make them allign to out's indices.
  *  \param out Indices which will get in added. */
 template<typename T>
-static void InsertIndices(const std::vector<T> &ins, T offset, std::vector<T> *out) {
+static void InsertIndices(const std::vector<T> &ins, wm_off_t offset, std::vector<T> *out) {
   std::vector<T> ins_cpy(ins.begin(), ins.end());
 
   // increment index values by offset
@@ -60,8 +59,8 @@ static void InsertIndices(const std::vector<T> &ins, T offset, std::vector<T> *o
 /*! \brief Used to replace WoWs extensions on files (cause some or wrong!!!). */
 static bool RreplaceWoWExt(const std::string &in, const std::string &old,
                         const std::string &rep, std::string *out) {
-  size_t last_bslash = in.rfind('\\');  // used to fix a single file: meatwagonhauler!
-  size_t pos = in.rfind(old);
+  wm_size_t last_bslash = in.rfind('\\');  // used to fix a single file: meatwagonhauler!
+  wm_size_t pos = in.rfind(old);
   if (last_bslash < pos && pos != std::string::npos) {
     *out = in;
     out->replace(pos, old.length(), rep);
@@ -79,9 +78,9 @@ static std::string ToLower(const std::string &str) {
 }
 
 static void TranslateVertices(const glm::vec3 &pos, Vertices_t *vertices,
-                              off_t off, size_t num) {
+                              wm_off_t off, wm_size_t num) {
   // transform vertices
-  for (size_t i = off; i < (off+num); i++) {
+  for (wm_size_t i = off; i < (off+num); i++) {
     (*vertices)[i] += pos;
   }
 }
@@ -93,7 +92,7 @@ static void TranslateVertices(const glm::vec3 &pos, Vertices_t *vertices,
  *  \param vertices Vertices to be transformed. */
 static void TransformVertices(const glm::vec3 &pos, const glm::vec3 &rot,
                               float scale, Vertices_t *vertices,
-                              off_t off, size_t num) {
+                              wm_off_t off, wm_size_t num) {
   // rotation
   glm::mat4 rot_mtx;
   rot_mtx = glm::rotate(rot_mtx, rot.y, glm::vec3(0, 1, 0));
@@ -101,7 +100,7 @@ static void TransformVertices(const glm::vec3 &pos, const glm::vec3 &rot,
   rot_mtx = glm::rotate(rot_mtx, rot.z, glm::vec3(1, 0, 0));
 
   // transform vertices
-  for (size_t i = off; i < (off+num); i++) {
+  for (wm_size_t i = off; i < (off+num); i++) {
     glm::vec3 &vtx = (*vertices)[i];
     glm::vec4 vtx4(vtx, 0);
     vtx4 = scale * rot_mtx * vtx4;
@@ -111,9 +110,9 @@ static void TransformVertices(const glm::vec3 &pos, const glm::vec3 &rot,
 
 static void TransformVertices(const glm::vec3 &pos, const glm::quat &rot,
                               float scale, Vertices_t *vertices,
-                              off_t off, size_t num) {
+                              wm_off_t off, wm_size_t num) {
   // transform vertices
-  for (size_t i = off; i < (off+num); i++) {
+  for (wm_size_t i = off; i < (off+num); i++) {
     glm::vec3 &vtx = (*vertices)[i];
     vtx = glm::gtx::quaternion::rotate(rot, vtx) * scale + pos;
   }
@@ -130,9 +129,11 @@ static void RearrangeBuffers(Indices32_t *indices, Vertices_t *vertices,
   // new vertices and normals
   Vertices_t new_vtx;
   Normals_t new_norm;
+  new_vtx.reserve(vertices->size());
+  new_norm.reserve(normals->size());
 
-  size_t new_count = 0;
-  for(size_t i = 0; i < indices->size(); i++) {
+  wm_size_t new_count = 0;
+  for(wm_size_t i = 0; i < indices->size(); i++) {
     uint32_t marked_index = (*indices)[i];
     // check if index is marked
     if (marked_index != 0xffffffff) {

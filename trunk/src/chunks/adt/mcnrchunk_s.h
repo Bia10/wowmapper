@@ -11,7 +11,7 @@ struct McnrChunk_s : public Chunk_c {
   std::vector<float> normals;
 
 
-  McnrChunk_s(Chunk_c *parent, off_t off)
+  McnrChunk_s(Chunk_c *parent, wm_off_t off)
       : Chunk_c(parent, off), normals(435) {
     // temporary normals array to hold these stupid 8 bit normals by blizz
     std::vector<int8_t> temp_normals(435);

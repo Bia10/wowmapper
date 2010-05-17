@@ -1,10 +1,9 @@
 #include "adt_c.h"
 
-ModelMap_t Adt_c::model_map_;
-
-Adt_c::Adt_c(Buffer_t *buffer, Indices32_t *objUids)
+Adt_c::Adt_c(Buffer_t *buffer, Indices32_t *objUids, ModelMap_t *modelMap)
     : Chunk_c(buffer),
       obj_uids_(objUids),
+      model_map_(modelMap),
       mhdr_(this, 0xc),
       mcin_(this, mhdr_.mcin_off),
       mmdx_(this, mhdr_.mmdx_off),
@@ -15,7 +14,7 @@ Adt_c::Adt_c(Buffer_t *buffer, Indices32_t *objUids)
       modf_(this, mhdr_.modf_off) {
   // check if we have to get MH2O chunk
   if (mhdr_.mh2o_off) {
-    off_t mh2o_off = mhdr_.mh2o_off;
+    wm_off_t mh2o_off = mhdr_.mh2o_off;
     mh2o_ = Mh2oChunk_p(new Mh2oChunk_s(this, mh2o_off));
   }
 
@@ -33,18 +32,9 @@ Adt_c::~Adt_c() {
 void Adt_c::InitMcnks() {
   mcnks_.reserve(256);
   for (int i = 0; i < 256; i++) {
-    off_t mcnk_off = mcin_.mcnk_info[i].mcnk_off;
+    wm_off_t mcnk_off = mcin_.mcnk_info[i].mcnk_off;
     mcnks_.push_back(new McnkChunk_s(this, mcnk_off));
   }
-}
-
-void Adt_c::CleanUp() {
-  for (ModelMap_t::iterator model = model_map_.begin();
-       model != model_map_.end();
-       ++model) {
-    delete model->second;
-  }
-  model_map_.clear();
 }
 
 void Adt_c::BuildTerrain(bool removeWet, Mesh_c *mesh) {
@@ -134,6 +124,20 @@ void Adt_c::BuildTerrain(bool removeWet, Mesh_c *mesh) {
   }
 
   RearrangeBuffers(&idx, &vtx, &norm);
+
+  // remove ocean: unsafe method!
+  wm_size_t ntris = idx.size()/3;
+  for(wm_size_t i = 0; i < ntris; i++) {
+    if(vtx[idx[i*3+0]].y <= 0 ||
+       vtx[idx[i*3+1]].y <= 0 ||
+       vtx[idx[i*3+2]].y <= 0) {
+      idx[i*3+0] = -1;
+      idx[i*3+1] = -1;
+      idx[i*3+2] = -1;
+    }
+  }
+  RearrangeBuffers(&idx, &vtx, &norm);
+
   mesh->SetColors(&Colors_t(vtx.size(), 0xff127e14)); // ABGR
   mesh->SetGeometry(&idx, &vtx, &norm);
 }
@@ -190,8 +194,8 @@ void Adt_c::GetDoodads(Meshes_t *meshes) {
 
 M2_c* Adt_c::GetM2(MpqHandler_c &mpqH, const std::string &filename, bool loadSkin) {
   // check if m2 is already in our map
-  ModelMap_t::iterator found = model_map_.find(filename);
-  if (found != model_map_.end()) {
+  ModelMap_t::iterator found = model_map_->find(filename);
+  if (found != model_map_->end()) {
     return reinterpret_cast<M2_c*>(found->second);
   } else {
     // not in map, so load it
@@ -199,7 +203,7 @@ M2_c* Adt_c::GetM2(MpqHandler_c &mpqH, const std::string &filename, bool loadSki
     mpqH.LoadFile(filename.c_str(), &buf);
     // create new entry in map
     M2_c *m2 = new M2_c(&buf);
-    model_map_.insert(ModelPair_t(filename, m2));
+    model_map_->insert(ModelPair_t(filename, m2));
 
     if (loadSkin) {
       std::string skin_name(filename);
@@ -235,16 +239,16 @@ void Adt_c::LoadWmos(MpqHandler_c &mpq_h, bool loadSkin) {
 
 Wmo_c* Adt_c::GetWmo(MpqHandler_c &mpqH, const std::string &filename, bool loadSkin) {
   // check if wmo is already in our map
-  ModelMap_t::iterator found = model_map_.find(filename);
-  if (found != model_map_.end()) {
+  ModelMap_t::iterator found = model_map_->find(filename);
+  if (found != model_map_->end()) {
     return reinterpret_cast<Wmo_c*>(found->second);
   } else {
     // not in map, so load it
     Buffer_t buf;
     mpqH.LoadFile(filename.c_str(), &buf);
     // create new entry in map
-    Wmo_c *wmo = new Wmo_c(&buf, filename, &model_map_);
-    model_map_.insert(ModelPair_t(filename, wmo));
+    Wmo_c *wmo = new Wmo_c(&buf, filename, model_map_);
+    model_map_->insert(ModelPair_t(filename, wmo));
     wmo->LoadWmo(mpqH);
     wmo->LoadDoodads(mpqH, loadSkin);
 
@@ -265,8 +269,10 @@ void Adt_c::GetWmos(Meshes_t *wmos, Meshes_t *doodads) const {
     wmo_mesh->SetPositon(Vec3_t(info.pos.x-17066.666666f, info.pos.y, info.pos.z-17066.666666f));
     wmo_mesh->SetRotation(Vec3_t(-info.rot.x, info.rot.y-90, info.rot.z-90));
 
+    Vec3_t pos = wmo_mesh->position();
+    Vec3_t rot = wmo_mesh->rotation();
     wmo->wmo->GetWmo(wmo_mesh);
-    wmo->wmo->GetDoodads(doodads, wmo_mesh);
+    wmo->wmo->GetDoodads(doodads, pos, rot);
   }
 }
 

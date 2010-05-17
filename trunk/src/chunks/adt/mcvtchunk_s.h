@@ -6,7 +6,7 @@
 struct McvtChunk_s: public Chunk_c {
   std::vector<float> heightmap;
 
-  McvtChunk_s(Chunk_c *parent, off_t off)
+  McvtChunk_s(Chunk_c *parent, wm_off_t off)
       : Chunk_c(parent, off), heightmap(145) {
     CopyVector(GetBuffer(), GetCurOffset() + DATA_OFFSET, 145, &heightmap);
   }

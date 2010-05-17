@@ -13,9 +13,9 @@ struct MopyChunk_s : public Chunk_c {
   MaterialInfos_t mat_infos;
 
 
-  MopyChunk_s(Chunk_c *parent, off_t off)
+  MopyChunk_s(Chunk_c *parent, wm_off_t off)
       : Chunk_c(parent, off) {
-    size_t num_infos = GetSize() / sizeof(MaterialInfo_s);
+    wm_size_t num_infos = GetSize() / sizeof(MaterialInfo_s);
     mat_infos.resize(num_infos);
     CopyVector(GetBuffer(), GetCurOffset()+DATA_OFFSET, num_infos, &mat_infos);
   }
