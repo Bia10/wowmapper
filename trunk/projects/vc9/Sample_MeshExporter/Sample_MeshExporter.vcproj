@@ -61,7 +61,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="wowmapper.lib libmpq.lib bzip2.lib zlib.lib vld.lib"
+				AdditionalDependencies="wowmapper.lib libmpq.lib bzip2.lib zlib.lib"
 				LinkIncremental="2"
 				AdditionalLibraryDirectories="..\Debug"
 				GenerateDebugInformation="true"
