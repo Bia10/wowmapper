@@ -3,7 +3,7 @@
 #include <GL/glew.h>
 #include <GL/freeglut.h>
 
-#include "../common.h"
+#include "../src/common.h"
 #include "camera_c.h"
 
 class GlView_c {
