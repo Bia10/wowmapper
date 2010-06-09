@@ -1,4 +1,7 @@
 #include "mpqhandler_c.h"
+#ifdef WIN32
+ #include <Windows.h>
+#endif
 
 MpqHandler_c::MpqHandler_c(const std::string &searchDir)
     : search_dir_(searchDir) {
@@ -36,7 +39,7 @@ int32_t MpqHandler_c::OpenMpq(const std::string &filename) {
     }
 
     //read file from archive...get file size and reserve space
-    int64_t filesize;
+    libmpq__off_t filesize;
     err = libmpq__file_unpacked_size(mpq_arc, file_num, &filesize);
     if(err != LIBMPQ_SUCCESS) {
       throw(std::string("libmpq__file_unpacked_size failed"));
@@ -72,6 +75,43 @@ int32_t MpqHandler_c::OpenMpq(const std::string &filename) {
   return err;
 }
 
+#ifdef WIN32
+void MpqHandler_c::GetMpqs() {
+  char absolute_path[256];
+  GetCurrentDirectory(256, absolute_path);
+
+  std::string mpq_dir(absolute_path);
+  mpq_dir.append("\\*.mpq");  
+
+  WIN32_FIND_DATA file_data;
+  HANDLE find_h = FindFirstFile(mpq_dir.c_str(), &file_data);
+
+  if(find_h == INVALID_HANDLE_VALUE) {
+    std::cout << "Cannot find file/directory." << std::endl;
+    return;
+  }
+
+  Strings_t mpq_names;
+  mpq_names.push_back(search_dir_ + "\\" + std::string(file_data.cFileName));
+
+  while(FindNextFile(find_h, &file_data)) {
+    mpq_names.push_back(search_dir_ + "\\" + std::string(file_data.cFileName));
+  }
+
+  FindClose(find_h);
+  
+  std::sort(mpq_names.begin(), mpq_names.end());
+
+  for (Strings_t::reverse_iterator mpq_name = mpq_names.rbegin();
+       mpq_name != mpq_names.rend();
+       ++mpq_name) {
+    OpenMpq(mpq_name->c_str());
+    std::cout << "Open MPQ: " << *mpq_name << std::endl;
+  }
+
+  std::cout << "Files in MPQs available: " << wow_file_map_.size() << std::endl;
+}
+#else
 void MpqHandler_c::GetMpqs() {
   DIR *dir = opendir(search_dir_.c_str());
 
@@ -100,10 +140,11 @@ void MpqHandler_c::GetMpqs() {
 
   closedir(dir);
 }
+#endif
 
 bool MpqHandler_c::LoadFile(const std::string &filename, Buffer_t *buffer) const {
-  int64_t unpacked = 0;
-  int64_t bytes = 0;
+  libmpq__off_t unpacked = 0;
+  libmpq__off_t bytes = 0;
   uint32_t file_num = 0;
 
   WowFileMap_t::const_iterator wow_file = wow_file_map_.find(ToLower(filename));
@@ -114,7 +155,7 @@ bool MpqHandler_c::LoadFile(const std::string &filename, Buffer_t *buffer) const
     libmpq__file_unpacked_size(mpq_arc, file_num, &unpacked);
 
     buffer->resize(unpacked);
-    libmpq__file_read(mpq_arc, file_num, buffer->data(), unpacked, &bytes);
+    libmpq__file_read(mpq_arc, file_num, &((*buffer)[0]), unpacked, &bytes);
   }
 
   return bytes > 0;

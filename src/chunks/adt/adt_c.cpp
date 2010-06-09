@@ -27,6 +27,13 @@ Adt_c::~Adt_c() {
   for (int i = 0; i < 256; i++) {
     delete mcnks_[i];
   }
+
+  // destroy wmos
+  for (Wmos_t::iterator wmo = wmos_.begin();
+       wmo != wmos_.end();
+       ++wmo) {
+    delete wmo->wmo;
+  }
 }
 
 void Adt_c::InitMcnks() {

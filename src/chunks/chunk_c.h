@@ -1,3 +1,19 @@
+/*  wowmapper - World of Warcraft MAP PARser
+    Copyright (C) 2010 PferdOne
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <http://www.gnu.org/licenses/>. */
+
 #pragma once
 
 #include "../common.h"
@@ -66,7 +82,9 @@ template<typename T>
 void Chunk_c::CopyVector(const Buffer_t &buf, wm_off_t buf_off,
                          wm_size_t num, std::vector<T> *dest,
                          wm_off_t dest_off) const {
-  uint8_t *data = reinterpret_cast<uint8_t*>(dest->data());
+  if (!num) return;
+
+  uint8_t *data = reinterpret_cast<uint8_t*>(&(*dest)[0]);
   std::raw_storage_iterator<uint8_t*, uint8_t> raw_iter(data+(dest_off*sizeof(T)));
 
   std::copy(buf.begin()+buf_off, buf.begin()+buf_off+(num*sizeof(T)), raw_iter);

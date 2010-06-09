@@ -1,3 +1,19 @@
+/*  wowmapper - World of Warcraft MAP PARser
+    Copyright (C) 2010 PferdOne
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <http://www.gnu.org/licenses/>. */
+
 #pragma once
 
 #include <map>
@@ -15,17 +31,31 @@
 #include <limits>
 
 #include <sys/types.h>
-#include <dirent.h>
 #include <string.h>
-#include <stdint.h>
 #include <time.h>
+#include <stdio.h>
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtx/quaternion.hpp>
 
-#include "types.h"
+#ifndef WIN32
+  #include <stdint.h>
+  #include <dirent.h>
+#else
+  typedef signed char       int8_t;
+  typedef unsigned char     uint8_t;
+  typedef signed short      int16_t;
+  typedef unsigned short    uint16_t;
+  typedef signed int        int32_t;
+  typedef unsigned int      uint32_t;
+  typedef signed __int64    int64_t;
+  typedef unsigned __int64  uint64_t;
+#endif
 
+
+// TYPEDEFS and 
+#include "types.h"
 
 #define TU 100.0f / (3.0f * 16.0f) // Tile Units
 
@@ -59,8 +89,8 @@ static void InsertIndices(const std::vector<T> &ins, wm_off_t offset, std::vecto
 /*! \brief Used to replace WoWs extensions on files (cause some or wrong!!!). */
 static bool RreplaceWoWExt(const std::string &in, const std::string &old,
                         const std::string &rep, std::string *out) {
-  wm_size_t last_bslash = in.rfind('\\');  // used to fix a single file: meatwagonhauler!
-  wm_size_t pos = in.rfind(old);
+  size_t last_bslash = in.rfind('\\');  // used to fix a single file: meatwagonhauler!
+  size_t pos = in.rfind(old);
   if (last_bslash < pos && pos != std::string::npos) {
     *out = in;
     out->replace(pos, old.length(), rep);

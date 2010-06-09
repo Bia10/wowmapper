@@ -4,6 +4,7 @@ M2_c::M2_c(Buffer_t *buffer) :
   Model_c(buffer), skin(NULL) {
   // get content information and resize to fit
   BlockInfo_s content_info = GetValue<BlockInfo_s>(0x3c, 0);
+
   content_.resize(content_info.num);
   // copy buffer and insert content
   CopyVector(GetBuffer(), content_info.offset, content_info.num, &content_);
@@ -70,6 +71,7 @@ void M2_c::GetBVIndices(Indices32_t *indices) const {
 
 void M2_c::GetBVVertices(Vertices_t *vertices) const {
   BlockInfo_s bvv_info = GetValue<BlockInfo_s> (0xe0, 0);
+
   vertices->resize(bvv_info.num);
 
   // get buffer, go to offset, how much to copy?, where to copy to, element to copy behind
