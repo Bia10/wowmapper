@@ -18,7 +18,11 @@ MpqHandler_c::~MpqHandler_c() {
 
 int32_t MpqHandler_c::OpenMpq(const std::string &filename) {
   // construct path from default directory and filename
+#ifdef WIN32
+  std::string mpq_path(filename);
+#else
   std::string mpq_path(search_dir_ + "/" + filename);
+#endif
 
   int32_t err = 0;
   uint8_t *buf = NULL;
@@ -56,7 +60,10 @@ int32_t MpqHandler_c::OpenMpq(const std::string &filename) {
     std::cout << err_msg << " (" << err << ")" << std::endl;
 
     delete [] buf;
-    libmpq__archive_close(mpq_arc);
+
+    if (mpq_arc) {
+      libmpq__archive_close(mpq_arc);
+    }
 
     return err;
   }
@@ -77,10 +84,13 @@ int32_t MpqHandler_c::OpenMpq(const std::string &filename) {
 
 #ifdef WIN32
 void MpqHandler_c::GetMpqs() {
-  char absolute_path[256];
-  GetCurrentDirectory(256, absolute_path);
+  // retrieve full path name
+  const int MAX_PATH_LENGTH = 256;
+  char path_name[MAX_PATH_LENGTH];
+  GetFullPathName(search_dir_.c_str(), MAX_PATH_LENGTH, path_name, NULL);
 
-  std::string mpq_dir(absolute_path);
+  // append search mask
+  std::string mpq_dir(path_name);
   mpq_dir.append("\\*.mpq");  
 
   WIN32_FIND_DATA file_data;
@@ -105,8 +115,8 @@ void MpqHandler_c::GetMpqs() {
   for (Strings_t::reverse_iterator mpq_name = mpq_names.rbegin();
        mpq_name != mpq_names.rend();
        ++mpq_name) {
-    OpenMpq(mpq_name->c_str());
     std::cout << "Open MPQ: " << *mpq_name << std::endl;
+    OpenMpq(mpq_name->c_str());    
   }
 
   std::cout << "Files in MPQs available: " << wow_file_map_.size() << std::endl;
