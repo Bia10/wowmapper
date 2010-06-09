@@ -27,13 +27,6 @@ Adt_c::~Adt_c() {
   for (int i = 0; i < 256; i++) {
     delete mcnks_[i];
   }
-
-  // destroy wmos
-  for (Wmos_t::iterator wmo = wmos_.begin();
-       wmo != wmos_.end();
-       ++wmo) {
-    delete wmo->wmo;
-  }
 }
 
 void Adt_c::InitMcnks() {
@@ -193,7 +186,8 @@ void Adt_c::GetDoodads(Meshes_t *meshes) {
     }
 
     // don't forget to readjust positions and rotations!
-    mesh->SetPositon(Vec3_t(info.pos.x-17066.666666f, info.pos.y, info.pos.z-17066.666666f));
+    static const float map_center = 17066.0f + (2.0f/3.0f);
+    mesh->SetPositon(Vec3_t(info.pos.x-map_center, info.pos.y, info.pos.z-map_center));
     mesh->SetRotation(Vec3_t(-info.rot.x, info.rot.y-90, info.rot.z-90));
     mesh->SetScale(info.scale/1024.0f);
   }

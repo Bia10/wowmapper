@@ -36,11 +36,11 @@
 
 /* file seek os port (sort of) */
 #ifdef WIN32
-int libmpq__fseek(FILE *stream, long offset, int origin) {
-  return fseek(stream, offset, origin);
+int libmpq__fseek(FILE *stream, __int64 offset, int origin) {
+  return _fseeki64(stream, offset, origin);
 #else
 int libmpq__fseek(FILE *stream, off_t offset, int whence) {
-  return seeko(stream, offset, whence);
+  return fseeko(stream, offset, whence);
 #endif
 }
 
@@ -884,13 +884,13 @@ int32_t libmpq__block_read(mpq_archive_s *mpq_archive, uint32_t file_number, uin
 
 	/* some common variables. */
 	uint8_t *in_buf;
-	uint32_t seed       = 0;
-	uint32_t encrypted  = 0;
-	uint32_t compressed = 0;
-	uint32_t imploded   = 0;
-	int32_t tb          = 0;
-	off_t block_offset  = 0;
-	off_t in_size       = 0;
+	uint32_t seed               = 0;
+	uint32_t encrypted          = 0;
+	uint32_t compressed         = 0;
+	uint32_t imploded           = 0;
+	int32_t tb                  = 0;
+	libmpq__off_t block_offset  = 0;
+	off_t in_size               = 0;
 	libmpq__off_t unpacked_size = 0;
 
 	/* check if given file number is not out of range. */
