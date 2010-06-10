@@ -109,6 +109,9 @@ void Wmo_c::LoadDoodads(MpqHandler_c &mpq_h, bool loadSkin) {
   for (ModdChunk_s::DoodadInfos_t::iterator info = modd_.doodad_infos.begin();
        info != modd_.doodad_infos.end();
        ++info) {
+    // thx blizzard, again one file where you tried to be funny?
+    if (info->name_off > modn_.GetSize()) continue;
+
     std::string filename(ToLower(modn_.doodad_names.c_str()+info->name_off));
     RreplaceWoWExt(filename, ".mdx", ".m2", &filename);
     RreplaceWoWExt(filename, ".mdl", ".m2", &filename);
