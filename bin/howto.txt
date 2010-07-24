@@ -1,0 +1,32 @@
+This is just a little description for the lazy people who just want to
+export the map files and don't care about the code.
+
+Usage example on Windows:
+Sample_MeshExporter C:\WoW\Data World\maps\Azeroth\Azeroth
+
+
+To read the *.mesh data you need to know the following:
+
+Bounding box chunk (28 bytes):
+id		char[4] (BBX)
+size		size_t
+bbmin		float[3]
+bbmax		float[3]
+
+ADT position chunk (8 bytes):
+id		char[4] (POS)
+size		size_t
+x		int
+y		int
+
+Index chunk:
+id		char[4] (IDX)
+size		size_t (num indices)
+indices 	int[size]
+
+Vertex chunk:
+id		char[4] (VTX)
+size		size_t (num vertices)
+vertices	float[3][size]
+
+Have fun.

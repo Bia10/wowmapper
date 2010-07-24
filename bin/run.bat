@@ -1,0 +1,1 @@
+Sample_MeshExporter C:\WoW\Data World\maps\Azeroth\Azeroth
