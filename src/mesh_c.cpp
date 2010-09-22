@@ -52,7 +52,7 @@ void Mesh_c::SetRotation(const Vec3_t &rotation) {
 }
 
 void Mesh_c::SetScale(float scale) {
-  scale_ = 1.0f;
+  scale_ = scale;
 }
 
 void Mesh_c::SetGeometry(Indices32_t *idx, Vertices_t *vtx, Normals_t *norm) {
