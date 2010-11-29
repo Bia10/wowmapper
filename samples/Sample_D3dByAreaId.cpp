@@ -157,7 +157,7 @@ void loadAllMpqs( MpqHandler &mpq_h ) {
   loadMpq( mpq_h, "wow-update-13164.MPQ" );
   loadMpq( mpq_h, "wow-update-oldworld-13286.MPQ" );
   loadMpq( mpq_h, "wow-update-oldworld-13154.MPQ" );
-  loadMpq( mpq_h, "expansion3.MPQ" );
+  //loadMpq( mpq_h, "expansion3.MPQ" );
   loadMpq( mpq_h, "expansion2.MPQ" );
   loadMpq( mpq_h, "expansion1.MPQ" );
   loadMpq( mpq_h, "world.MPQ" );
