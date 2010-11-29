@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 10.00
 # Visual Studio 2008
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "wowmapper", "wowmapper.vcproj", "{5D634AAF-667E-410F-AC45-368256276CBC}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Sample_MeshExporter", "Sample_MeshExporter\Sample_MeshExporter.vcproj", "{DC170370-2C15-4B05-A6C2-4F323A3638C5}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Sample_D3dByAreaId", "Sample_D3dAreaById\Sample_D3dAreaById.vcproj", "{DC170370-2C15-4B05-A6C2-4F323A3638C5}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libmpq", "libmpq\libmpq.vcproj", "{7DB14170-BFA9-41B1-ACE1-79E0E42B05D3}"
 EndProject

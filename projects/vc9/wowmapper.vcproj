@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="Windows-1252"?>
 <VisualStudioProject
 	ProjectType="Visual C++"
-	Version="9.00"
+	Version="9,00"
 	Name="wowmapper"
 	ProjectGUID="{5D634AAF-667E-410F-AC45-368256276CBC}"
 	RootNamespace="wowmapper"
@@ -153,61 +153,33 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
-				RelativePath="..\..\src\mesh_c.cpp"
+				RelativePath="..\..\src\adt.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\src\mpqhandler_c.cpp"
+				RelativePath="..\..\src\m2.cpp"
 				>
 			</File>
-			<Filter
-				Name="chunks"
+			<File
+				RelativePath="..\..\src\mpqhandler.cpp"
 				>
-				<File
-					RelativePath="..\..\src\chunks\chunk_c.cpp"
-					>
-				</File>
-				<Filter
-					Name="wmo"
-					>
-					<File
-						RelativePath="..\..\src\chunks\wmo\subwmo_c.cpp"
-						>
-					</File>
-					<File
-						RelativePath="..\..\src\chunks\wmo\wmo_c.cpp"
-						>
-					</File>
-				</Filter>
-				<Filter
-					Name="wdt"
-					>
-					<File
-						RelativePath="..\..\src\chunks\wdt\wdt_c.cpp"
-						>
-					</File>
-				</Filter>
-				<Filter
-					Name="m2"
-					>
-					<File
-						RelativePath="..\..\src\chunks\m2\m2_c.cpp"
-						>
-					</File>
-					<File
-						RelativePath="..\..\src\chunks\m2\skin_c.cpp"
-						>
-					</File>
-				</Filter>
-				<Filter
-					Name="adt"
-					>
-					<File
-						RelativePath="..\..\src\chunks\adt\adt_c.cpp"
-						>
-					</File>
-				</Filter>
-			</Filter>
+			</File>
+			<File
+				RelativePath="..\..\src\obj0.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\src\wdt.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\src\wmogroup.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\src\wmomodel.cpp"
+				>
+			</File>
 		</Filter>
 		<Filter
 			Name="Header Files"
@@ -215,217 +187,41 @@
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
 			>
 			<File
+				RelativePath="..\..\src\adt.h"
+				>
+			</File>
+			<File
 				RelativePath="..\..\src\common.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\src\mesh_c.h"
+				RelativePath="..\..\src\m2.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\src\mpqhandler_c.h"
+				RelativePath="..\..\src\mpqhandler.h"
 				>
 			</File>
 			<File
-				RelativePath="..\..\src\types.h"
+				RelativePath="..\..\src\mverchunk.h"
 				>
 			</File>
-			<Filter
-				Name="chunks"
+			<File
+				RelativePath="..\..\src\obj0.h"
 				>
-				<File
-					RelativePath="..\..\src\chunks\chunk_c.h"
-					>
-				</File>
-				<File
-					RelativePath="..\..\src\chunks\model_c.h"
-					>
-				</File>
-				<Filter
-					Name="wmo"
-					>
-					<File
-						RelativePath="..\..\src\chunks\wmo\moddchunk_s.h"
-						>
-					</File>
-					<File
-						RelativePath="..\..\src\chunks\wmo\modnchunk_s.h"
-						>
-					</File>
-					<File
-						RelativePath="..\..\src\chunks\wmo\modschunk_s.h"
-						>
-					</File>
-					<File
-						RelativePath="..\..\src\chunks\wmo\mogichunk_s.h"
-						>
-					</File>
-					<File
-						RelativePath="..\..\src\chunks\wmo\mognchunk_s.h"
-						>
-					</File>
-					<File
-						RelativePath="..\..\src\chunks\wmo\mogpchunk_s.h"
-						>
-					</File>
-					<File
-						RelativePath="..\..\src\chunks\wmo\mohdchunk_s.h"
-						>
-					</File>
-					<File
-						RelativePath="..\..\src\chunks\wmo\moltchunk_s.h"
-						>
-					</File>
-					<File
-						RelativePath="..\..\src\chunks\wmo\momtchunk_s.h"
-						>
-					</File>
-					<File
-						RelativePath="..\..\src\chunks\wmo\monrchunk_s.h"
-						>
-					</File>
-					<File
-						RelativePath="..\..\src\chunks\wmo\moprchunk_s.h"
-						>
-					</File>
-					<File
-						RelativePath="..\..\src\chunks\wmo\moptchunk_s.h"
-						>
-					</File>
-					<File
-						RelativePath="..\..\src\chunks\wmo\mopvchunk_s.h"
-						>
-					</File>
-					<File
-						RelativePath="..\..\src\chunks\wmo\mopychunk_s.h"
-						>
-					</File>
-					<File
-						RelativePath="..\..\src\chunks\wmo\mosbchunk_s.h"
-						>
-					</File>
-					<File
-						RelativePath="..\..\src\chunks\wmo\motxchunk_s.h"
-						>
-					</File>
-					<File
-						RelativePath="..\..\src\chunks\wmo\movbchunk_s.h"
-						>
-					</File>
-					<File
-						RelativePath="..\..\src\chunks\wmo\movichunk_s.h"
-						>
-					</File>
-					<File
-						RelativePath="..\..\src\chunks\wmo\movtchunk_s.h"
-						>
-					</File>
-					<File
-						RelativePath="..\..\src\chunks\wmo\movvchunk_s.h"
-						>
-					</File>
-					<File
-						RelativePath="..\..\src\chunks\wmo\subwmo_c.h"
-						>
-					</File>
-					<File
-						RelativePath="..\..\src\chunks\wmo\wmo_c.h"
-						>
-					</File>
-				</Filter>
-				<Filter
-					Name="wdt"
-					>
-					<File
-						RelativePath="..\..\src\chunks\wdt\mainchunk_s.h"
-						>
-					</File>
-					<File
-						RelativePath="..\..\src\chunks\wdt\mphdchunk_s.h"
-						>
-					</File>
-					<File
-						RelativePath="..\..\src\chunks\wdt\wdt_c.h"
-						>
-					</File>
-				</Filter>
-				<Filter
-					Name="m2"
-					>
-					<File
-						RelativePath="..\..\src\chunks\m2\m2_c.h"
-						>
-					</File>
-					<File
-						RelativePath="..\..\src\chunks\m2\skin_c.h"
-						>
-					</File>
-				</Filter>
-				<Filter
-					Name="adt"
-					>
-					<File
-						RelativePath="..\..\src\chunks\adt\adt_c.h"
-						>
-					</File>
-					<File
-						RelativePath="..\..\src\chunks\adt\mcinchunk_s.h"
-						>
-					</File>
-					<File
-						RelativePath="..\..\src\chunks\adt\mcnkchunk_s.h"
-						>
-					</File>
-					<File
-						RelativePath="..\..\src\chunks\adt\mcnrchunk_s.h"
-						>
-					</File>
-					<File
-						RelativePath="..\..\src\chunks\adt\mcrfchunk_s.h"
-						>
-					</File>
-					<File
-						RelativePath="..\..\src\chunks\adt\mcvtchunk_s.h"
-						>
-					</File>
-					<File
-						RelativePath="..\..\src\chunks\adt\mddfchunk_s.h"
-						>
-					</File>
-					<File
-						RelativePath="..\..\src\chunks\adt\mh2ochunk_s.h"
-						>
-					</File>
-					<File
-						RelativePath="..\..\src\chunks\adt\mhdrchunk_s.h"
-						>
-					</File>
-					<File
-						RelativePath="..\..\src\chunks\adt\mmdxchunk_s.h"
-						>
-					</File>
-					<File
-						RelativePath="..\..\src\chunks\adt\mmidchunk_s.h"
-						>
-					</File>
-					<File
-						RelativePath="..\..\src\chunks\adt\modfchunk_s.h"
-						>
-					</File>
-					<File
-						RelativePath="..\..\src\chunks\adt\mtexchunk_s.h"
-						>
-					</File>
-					<File
-						RelativePath="..\..\src\chunks\adt\mwidchunk_s.h"
-						>
-					</File>
-					<File
-						RelativePath="..\..\src\chunks\adt\mwmochunk_s.h"
-						>
-					</File>
-				</Filter>
-			</Filter>
+			</File>
+			<File
+				RelativePath="..\..\src\wdt.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\src\wmogroup.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\src\wmomodel.h"
+				>
+			</File>
 		</Filter>
 	</Files>
 	<Globals>
