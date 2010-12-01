@@ -13,9 +13,11 @@ Adt::Adt( const BufferS_t &adt_buf ) {
   std::stringbuf str_buf( adt_buf );
   std::istream i_str( &str_buf );
 
+  uint32_t chunk_size = 0;
+
   // read in chunk by chunk
-  i_str.read( (char*)&_mverChunk, sizeof( MverChunk_s ) );
-  i_str.read( (char*)&_mhdrChunk, sizeof( MhdrChunk_s ) );
+  chunk_size = readChunkHead( i_str, "MVER", (char*)&_mverChunk, sizeof( MverChunk_s ) );
+  chunk_size = readChunkHead( i_str, "MHDR", (char*)&_mhdrChunk, sizeof( MhdrChunk_s ) );
 
   parseMh2oChunk( i_str );
 
@@ -40,6 +42,27 @@ Adt::Adt( const BufferS_t &adt_buf ) {
 }
 
 //------------------------------------------------------------------------------
+Adt::~Adt() {
+  for ( Mh2oChunk_s::Headers_t::iterator head_iter = _mh2oChunk.headers.begin();
+        head_iter != _mh2oChunk.headers.end();
+        ++head_iter ) {
+    // cleanup information data
+    Mh2oChunk_s::Header_s::Informations_t *infos = head_iter->infos;
+    if ( infos ) {
+      for ( Mh2oChunk_s::Header_s::Informations_t::iterator info_iter = infos->begin();
+            info_iter != infos->end();
+            ++info_iter ) {
+        delete info_iter->mask2;
+        delete info_iter->heightMap;
+      }
+    }
+
+    delete head_iter->infos;
+    delete head_iter->renderMap;
+  }
+}
+
+//------------------------------------------------------------------------------
 const AdtTerrain_t& Adt::getTerrain() const {
   return _adtTerrain;
 }
@@ -48,26 +71,70 @@ const AdtTerrain_t& Adt::getTerrain() const {
 bool Adt::parseMh2oChunk( std::istream &i_str ) {
   if ( !_mhdrChunk.mh2oOff ) return false;
 
-  // get data offset for MH2O chunk
-  uint32_t mh2o_data_off = i_str.tellg();
-  mh2o_data_off += 0x8;
-
-  i_str.read( (char*)&_mh2oChunk, sizeof( Mh2oChunk_s ) );
+  uint32_t pos = i_str.tellg();
+  uint32_t data_offset = pos + CHUNK_DATA;
+  size_t chunk_size = readChunkHead( i_str, "MH2O", (char*)&_mh2oChunk );
 
   // read MH2O headers
-  Mh2oHeaders_t headers( 256 );
+  Mh2oChunk_s::Headers_t &headers = _mh2oChunk.headers;
+  headers.resize( 256 );
   for ( int i = 0; i < 256; i++ ) {
     i_str.read( (char*)&headers[i], sizeof( Mh2oChunk_s::Header_s ) );
   }
   
-  // read MH2O information
-  Mh2oInformations_t informations( 256 );
+  // get information
   for ( int i = 0; i < 256; i++ ) {
-    i_str.read( (char*)&informations[i], sizeof( Mh2oChunk_s::Information_s ) );
+    // get header values
+    Mh2oChunk_s::Header_s &header = headers[i];
+    uint32_t render_offset = (uint32_t)header.renderMap;
+    uint32_t info_offset = (uint32_t)header.infos;
+    uint32_t num_layers = (uint32_t)header.numLayers;
+    
+    // set position to read the render map
+    header.renderMap = new uint64_t;
+    i_str.seekg( data_offset + render_offset );
+    i_str.read( (char*)header.renderMap, sizeof( uint64_t ) );
+    
+    // create layers
+    if ( info_offset && num_layers ) {
+      header.infos = new Mh2oChunk_s::Header_s::Informations_t( num_layers );
+      // set seek position to information offset
+      i_str.seekg( data_offset + info_offset );
+    }
+
+    // read information layers
+    for ( uint32_t j = 0; j < header.numLayers; j++ ) {
+      Mh2oChunk_s::Header_s::Information_s &info = (*header.infos)[j];
+      i_str.read( (char*)&info, sizeof( Mh2oChunk_s::Header_s::Information_s ) );
+
+      // get mask and heightmap
+      uint32_t mask2_offset = (uint32_t)info.mask2;
+      uint32_t height_map_offset = (uint32_t)info.heightMap;
+
+      // read mask
+      if ( mask2_offset && (info.height > 0) ) {
+        
+        info.mask2 = new Indices8_t( info.height );
+        i_str.seekg( data_offset + mask2_offset );
+        i_str.read( (char*)&(*info.mask2)[0], sizeof( uint8_t ) * info.height );
+      } else {
+        info.mask2 = NULL;
+      }
+
+      // read height map
+      if ( height_map_offset && (info.width*info.height > 0) ) {
+        info.heightMap = new HeightMap_t( info.width * info.height );
+        i_str.seekg( data_offset + height_map_offset );
+        i_str.read( (char*)&(*info.heightMap)[0],
+                    sizeof( float ) * info.width * info.height );
+      } else {
+        info.heightMap = NULL;
+      }
+    }
   }
 
-  // since we do not parse water yet, set istream to the correct position after MH2O
-  i_str.seekg( mh2o_data_off + _mh2oChunk.size, std::ios::beg );
+  // set seek position to end of MH2O chunk
+  i_str.seekg( data_offset + _mh2oChunk.size );
 
   return true;
 }

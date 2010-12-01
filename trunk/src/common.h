@@ -111,8 +111,25 @@ static void mergeIndices( const Indices32_t &src, uint32_t off, Indices32_t *des
   dest->insert( dest->end(), increment.begin(), increment.end() );
 }
 
+//------------------------------------------------------------------------------
 static void quitApp( const std::string &msg ) {
   std::cout << msg << std::endl;
-  std::cout << "quit" << std::endl;
   exit( 1 );
+}
+
+//------------------------------------------------------------------------------
+static void checkChunkId( const char *chunk_id, const char *check_id ) {
+  for ( int i = 0; i < 4; i++ ) {
+    if ( chunk_id[3-i] != check_id[i] ) {
+      quitApp( "wrong chunk id encountered" );
+    }
+  }
+}
+
+//------------------------------------------------------------------------------
+static uint32_t readChunkHead( std::istream &i_str, const char *check_id,
+                               char *chunk, size_t chunk_size = CHUNK_DATA ) {
+  i_str.read( chunk, chunk_size );
+  checkChunkId( chunk, check_id );
+  return *(uint32_t*)(chunk+4);
 }
