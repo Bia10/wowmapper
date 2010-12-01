@@ -30,7 +30,7 @@ int main( int arch, char **argv ) {
 
   // load WDT file which tells us what ADT tiles to load
   BufferS_t file_buffer;
-  std::string zone_path( "oldworld\\world\\maps\\azeroth\\azeroth" );
+  std::string zone_path( "world\\maps\\kalimdor\\kalimdor" );
   mpq_h.getFile( zone_path + ".wdt", &file_buffer );
 
   // create geometry buffer
@@ -43,7 +43,7 @@ int main( int arch, char **argv ) {
 
   // GET COORDS BY AREA ID! AREA ID -> 12
   AdtCoords_t coords;
-  getCoordsByAreaId( mpq_h, wdt.getAdtCoords(), zone_path, 12, &coords );
+  getCoordsByAreaId( mpq_h, wdt.getAdtCoords(), zone_path, 440, &coords );
   
   if ( coords.size() <= 0 ) {
     std::cout << "Zone not found." << std::endl;
@@ -194,7 +194,7 @@ void loadObjectReferences( MpqHandler &mpq_h, Obj0 &obj0, Indices32_t *indices,
       Doodad_s doodad;
       obj0.getDoodad( ref->doodadIndices[d], &doodad );
 
-      // find unique identifier in map, only  one uid can be present
+      // find unique identifier in map, only one uid can be present
       UidMap_t::iterator found = uid_map.find( doodad.info.uid );
 
       // unique identifier not found: insert UID in map
@@ -277,7 +277,7 @@ void getCoordsByAreaId( MpqHandler &mpq_h, const AdtCoords_t &original_coords,
         iter != original_coords.end();
         ++iter ) {
     count++;
-    //if ( count < 462 || count > 609 ) continue;
+    if ( count < 779 || count > 918 ) continue;
 
     // create file string
     std::stringstream adt_ss;
@@ -294,6 +294,7 @@ void getCoordsByAreaId( MpqHandler &mpq_h, const AdtCoords_t &original_coords,
     for ( AdtTerrain_t::const_iterator terr = adt_terr.begin();
           terr != adt_terr.end();
           ++terr ) {
+      //std::cout << "ID: " << terr->areaId << std::endl;
       if ( terr->areaId == area_id ) {
         std::cout << " found area";
         coords->push_back( *iter );

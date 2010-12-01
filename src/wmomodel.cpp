@@ -6,88 +6,94 @@ WmoModel::WmoModel( const BufferS_t &wmo_buf ) {
   std::stringbuf str_buf( wmo_buf );
   std::istream i_str( &str_buf );
 
+  uint32_t chunk_size = 0;
+
   // read in chunk by chunk
-  i_str.read( (char*)&_mverChunk, sizeof( MverChunk_s ) );
-  i_str.read( (char*)&_mohdChunk, sizeof( MohdChunk_s ) );
+  chunk_size = readChunkHead( i_str, "MVER", (char*)&_mverChunk, sizeof( MverChunk_s ) );
+  chunk_size = readChunkHead( i_str, "MOHD", (char*)&_mohdChunk, sizeof( MohdChunk_s ) );
   
   // read MOTX filenames
-  i_str.read( (char*)&_motxChunk, CHUNK_DATA );
-  _motxChunk.textureNames.resize( _motxChunk.size );
-  i_str.read( &_motxChunk.textureNames[0], _motxChunk.size );
+  chunk_size = readChunkHead( i_str, "MOTX", (char*)&_motxChunk );
+  if ( _motxChunk.size ) {
+    _motxChunk.textureNames.resize( _motxChunk.size );
+    i_str.read( &_motxChunk.textureNames[0], _motxChunk.size );
+  }
 
   // read MOTM chunk and material structs for each BLP inside
-  i_str.read( (char*)&_momtChunk, CHUNK_DATA );
-  _momtChunk.materials.resize( _momtChunk.size / sizeof( MomtChunk_s::Materials_s ) );
-  i_str.read( (char*)&_momtChunk.materials[0], _momtChunk.size );
+  chunk_size = readChunkHead( i_str, "MOMT", (char*)&_momtChunk );
+  if ( _momtChunk.size ) {
+    _momtChunk.materials.resize( _momtChunk.size / sizeof( MomtChunk_s::Materials_s ) );
+    i_str.read( (char*)&_momtChunk.materials[0], _momtChunk.size );
+  }
 
   // read MOGN group names
-  i_str.read( (char*)&_mognChunk, CHUNK_DATA );
-  _mognChunk.groupNames.resize( _mognChunk.size );
-  i_str.read( &_mognChunk.groupNames[0], _mognChunk.size );  
+  chunk_size = readChunkHead( i_str, "MOGN", (char*)&_mognChunk );
+  if ( _mognChunk.size ) {
+    _mognChunk.groupNames.resize( _mognChunk.size );
+    i_str.read( &_mognChunk.groupNames[0], _mognChunk.size );  
+  }
 
   // read MOGI chunk and its group informations
-  i_str.read( (char*)&_mogiChunk, CHUNK_DATA );
-  _mogiChunk.infos.resize( _mogiChunk.size / sizeof( MogiChunk_s::GroupInformation_s ) );
-  i_str.read( (char*)&_mogiChunk.infos[0], _mogiChunk.size );
+  chunk_size = readChunkHead( i_str, "MOGI", (char*)&_mogiChunk );
+  if ( _mogiChunk.size ) {
+    _mogiChunk.infos.resize( _mogiChunk.size / sizeof( MogiChunk_s::GroupInformation_s ) );
+    i_str.read( (char*)&_mogiChunk.infos[0], _mogiChunk.size );
+  }
 
   // read MOSB chunk: sky box
-  i_str.read( (char*)&_mosbChunk, sizeof( MosbChunk_s ) );
+  chunk_size = readChunkHead( i_str, "MOSB", (char*)&_mosbChunk );
+  i_str.seekg( _mosbChunk.size + i_str.tellg() ); // skip chunk
 
   // read MOPV chunk: portal vertices
-  i_str.read( (char*)&_mopvChunk, CHUNK_DATA );
-  i_str.seekg( _mopvChunk.size + i_str.tellg() );
-
-  // had problems :( 58 and a half portal vertices, result: memory corruption, so skip it
-  /*if ( _mopvChunk.size ) {
-    size_t v_size = sizeof( MopvChunk_s::PortalVertices_s );
-    std::cout << "MOPV size: " << (float( _mopvChunk.size ) / v_size) << std::endl;
-    _mopvChunk.vertices.resize( _mopvChunk.size / v_size );
-    i_str.read( (char*)&_mopvChunk.vertices[0], _mopvChunk.size );
-  }*/
+  // TODO: PortalVertices_s structure corruptes memory on some occasions -> FIX IT!
+  chunk_size = readChunkHead( i_str, "MOPV", (char*)&_mopvChunk );
+  i_str.seekg( _mopvChunk.size + i_str.tellg() ); // skip chunk
 
   // read MOPT chunk: portal informations
-  i_str.read( (char*)&_moptChunk, CHUNK_DATA );
+  chunk_size = readChunkHead( i_str, "MOPT", (char*)&_moptChunk );
   if ( _moptChunk.size ) {
     _moptChunk.infos.resize( _moptChunk.size / sizeof( MoptChunk_s::PortalInformation_s ) );
     i_str.read( (char*)&_moptChunk.infos[0], _moptChunk.size );
   }
 
   // read MOPR chunk: portal refererences
-  i_str.read( (char*)&_moprChunk, CHUNK_DATA );
+  chunk_size = readChunkHead( i_str, "MOPR", (char*)&_moprChunk );
   if ( _moprChunk.size ) {
     _moprChunk.references.resize( _moprChunk.size / sizeof( MoprChunk_s::PortalReference_s ) );
     i_str.read( (char*)&_moprChunk.references[0], _moprChunk.size );
   }
 
   // read MOVV chunk
-  i_str.read( (char*)&_movvChunk, CHUNK_DATA );
+  chunk_size = readChunkHead( i_str, "MOVV", (char*)&_movvChunk );
   if ( _movvChunk.size ) {
     _movvChunk.content.resize( _movvChunk.size );
     i_str.read( (char*)&_movvChunk.content[0], _movvChunk.size );
   }
 
   // read MOVB chunk
-  i_str.read( (char*)&_movbChunk, CHUNK_DATA );
+  chunk_size = readChunkHead( i_str, "MOVB", (char*)&_movbChunk );
+  i_str.seekg( _movbChunk.size + i_str.tellg() ); // skip chunk
 
   // read MOLT chunk: lighting information
-  i_str.read( (char*)&_moltChunk, CHUNK_DATA );
+  chunk_size = readChunkHead( i_str, "MOLT", (char*)&_moltChunk );
   if ( _moltChunk.size ) {
     _moltChunk.infos.resize( _moltChunk.size / sizeof( MoltChunk_s::LightInformation_s ) );
     i_str.read( (char*)&_moltChunk.infos[0], _moltChunk.size );
   }
 
   // read MODS chunk: doodad sets
-  i_str.read( (char*)&_modsChunk, CHUNK_DATA );
-  _modsChunk.doodadSets.resize( _modsChunk.size / sizeof( ModsChunk_s::DoodadSet_s ) );
-  i_str.read( (char*)&_modsChunk.doodadSets[0], _modsChunk.size );
+  chunk_size = readChunkHead( i_str, "MODS", (char*)&_modsChunk );
+  i_str.seekg( _modsChunk.size + i_str.tellg() ); // skip chunk
 
   // read MODN chunk: doodad names
-  i_str.read( (char*)&_modnChunk, CHUNK_DATA );
-  _modnChunk.doodadNames.resize( _modnChunk.size );
-  i_str.read( (char*)&_modnChunk.doodadNames[0], _modnChunk.size );
+  chunk_size = readChunkHead( i_str, "MODN", (char*)&_modnChunk );
+  if ( _modnChunk.size ) {
+    _modnChunk.doodadNames.resize( _modnChunk.size );
+    i_str.read( (char*)&_modnChunk.doodadNames[0], _modnChunk.size );
+  }
 
   // read MODD chunk: doodad informations
-  i_str.read( (char*)&_moddChunk, CHUNK_DATA );
+  chunk_size = readChunkHead( i_str, "MODD", (char*)&_moddChunk );
   if ( _moddChunk.size ) {
     _moddChunk.infos.resize( _moddChunk.size / sizeof( ModdChunk_s::DoodadInformation_s ) );
     i_str.read( (char*)&_moddChunk.infos[0], _moddChunk.size );

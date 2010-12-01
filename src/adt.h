@@ -47,33 +47,36 @@ struct MhdrChunk_s {
 /** The MH20 chunk contains 256 header entries. The header points to
     the information blocks in the buffer. **/
 struct Mh2oChunk_s {
-  char id[4];
-  uint32_t size;
-
-  /** Headers contains offsets to the information blocks and to the
+  /** Headers contain offsets to the information blocks and to the
       render bitmap aswell. **/
   struct Header_s {
-    uint32_t infoOff;
+    /** Actual information about the water. **/
+    struct Information_s {
+      uint16_t type;
+      uint16_t flags;
+      float heightLevel1;
+      float heightLevel2;
+      uint8_t xOffset;
+      uint8_t yOffset;
+      uint8_t width;
+      uint8_t height;
+      Indices8_t *mask2;
+      HeightMap_t *heightMap;
+    };
+    typedef std::vector<Information_s> Informations_t;
+
+    Informations_t *infos;
     uint32_t numLayers;
-    uint32_t renderOff;
+    uint64_t *renderMap;
   };
-  
-  /** Actual information about the water. **/
-  struct Information_s {
-    uint16_t type;
-    uint16_t flags;
-    float heightLevel1;
-    float heightLevel2;
-    uint8_t xOffset;
-    uint8_t yOffset;
-    uint8_t width;
-    uint8_t height;
-    uint32_t mask2Off;
-    uint32_t heightmapOff;
-  };
+  typedef std::vector<Header_s> Headers_t;
+
+  char id[4];
+  uint32_t size;
+  Headers_t headers;  
 };
-typedef std::vector<Mh2oChunk_s::Header_s> Mh2oHeaders_t;
-typedef std::vector<Mh2oChunk_s::Information_s> Mh2oInformations_t;
+
+
 
 
 //------------------------------------------------------------------------------
@@ -147,6 +150,7 @@ typedef std::vector<Terrain_s> AdtTerrain_t;
 class Adt {
  public:
   Adt( const BufferS_t &adt_buf );
+  ~Adt();
   const AdtTerrain_t& getTerrain() const;
 
  private:
