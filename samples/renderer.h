@@ -28,16 +28,23 @@ struct CustomVertex_s {
 };
 typedef std::vector<CustomVertex_s> CustomVertices_t;
 
+/** Little helper class to ease rendering. **/
 class Renderer {
  public:
   Renderer( uint32_t width, uint32_t height, const std::string &title );
+  /** Initializes SDL and D3D . **/
   bool initialize();
+  /** Called everytime after begin() to setup the scene. **/
   void initScene();
+  /** Place render calls in between begin and end. **/
   void begin();
   void end();
+  /** Create index and vertex buffer by the size given in the parameters. **/
   void createBuffers( size_t ib_size, size_t vb_size, DWORD format,
                       IDirect3DIndexBuffer9 **ib, IDirect3DVertexBuffer9 **vb ) const;
+  /** Return IDirect3DDevice9. **/
   IDirect3DDevice9* getDevice() const;
+  /** Returns camera. **/
   Camera& getCamera();
 
  private:
@@ -45,6 +52,8 @@ class Renderer {
   bool initDirect3D();
   void sdlPollEvents();
   void sdlHandleInputEvents( SDL_Event &event );
+  /** Create directional lights with a direction and a diffuse color. **/
+  void createDirectionalLight( const glm::vec3 &dir, const glm::vec3 &diff );
 
   uint32_t _width, _height;
   std::string _title;
@@ -52,4 +61,5 @@ class Renderer {
   IDirect3DDevice9 *_d3dDev9;
   Camera _camera;
   int _lastMouseX, _lastMouseY;
+  int _lightCounter;
 };

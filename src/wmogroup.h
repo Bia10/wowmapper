@@ -81,6 +81,7 @@ struct MotvChunk_s {
 };
 
 //------------------------------------------------------------------------------
+/** Parses WMO group files which contain actual geometry information for WMOs. **/
 class WmoGroup {
  public:
   WmoGroup( BufferS_t &grp_buf );

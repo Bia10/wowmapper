@@ -5,46 +5,47 @@ Obj0::Obj0( const BufferS_t &obj_buf ) {
   std::stringbuf str_buf( obj_buf );
   std::istream i_str( &str_buf );
 
+  uint32_t chunk_size = 0;
   // read MVER chunk
-  i_str.read( (char*)&_mverChunk, sizeof( MverChunk_s ) );
+  chunk_size = readChunkHead( i_str, "MVER", (char*)&_mverChunk, sizeof( MverChunk_s ) );
 
   // read MMDX chunk
-  i_str.read( (char*)&_mmdxChunk, sizeof( MmdxChunk_s ) );
+  chunk_size = readChunkHead( i_str, "MMDX", (char*)&_mmdxChunk );
   if ( _mmdxChunk.size ) {
     _doodadNames.resize( _mmdxChunk.size );
     i_str.read( (char*)&_doodadNames[0], _mmdxChunk.size );
   }
 
   // read MMID chunk
-  i_str.read( (char*)&_mmidChunk, sizeof( MmidChunk_s ) );
+  chunk_size = readChunkHead( i_str, "MMID", (char*)&_mmidChunk );
   if ( _mmidChunk.size ) {
     _mmdxIndices.resize( _mmidChunk.size / 4 );
     i_str.read( (char*)&_mmdxIndices[0], _mmidChunk.size );
   }
 
   // read MWMO chunk
-  i_str.read( (char*)&_mwmoChunk, sizeof( MwmoChunk_s ) );
+  chunk_size = readChunkHead( i_str, "MWMO", (char*)&_mwmoChunk );
   if ( _mwmoChunk.size ) {
     _wmoNames.resize( _mwmoChunk.size );
     i_str.read( (char*)&_wmoNames[0], _mwmoChunk.size );
   }
 
   // read MMID chunk
-  i_str.read( (char*)&_mwidChunk, sizeof( MwidChunk_s ) );
+  chunk_size = readChunkHead( i_str, "MWID", (char*)&_mwidChunk );
   if ( _mwidChunk.size ) {
     _mwmoIndices.resize( _mwidChunk.size / 4 );
     i_str.read( (char*)&_mwmoIndices[0], _mwidChunk.size );
   }
 
   // read MDDF chunk
-  i_str.read( (char*)&_mddfChunk, sizeof( MddfChunk_s ) );
+  chunk_size = readChunkHead( i_str, "MDDF", (char*)&_mddfChunk );
   if ( _mddfChunk.size ) {
     _doodadInfo.resize( _mddfChunk.size / sizeof( MddfChunk_s::DoodadInfo_s ) );
     i_str.read( (char*)&_doodadInfo[0], _mddfChunk.size );
   }
 
   // read MODF chunk
-  i_str.read( (char*)&_modfChunk, sizeof( ModfChunk_s ) );
+  chunk_size = readChunkHead( i_str, "MODF", (char*)&_modfChunk );
   if ( _modfChunk.size ) {
     _wmoInfo.resize( _modfChunk.size / sizeof( ModfChunk_s::WmoInfo_s ) );
     i_str.read( (char*)&_wmoInfo[0], _modfChunk.size );

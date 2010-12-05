@@ -182,3 +182,13 @@ void WmoModel::getNormals( Normals_t *normals ) const {
     normals->insert( normals->end(), grp_normals.begin(), grp_normals.end() );
   }
 }
+
+//------------------------------------------------------------------------------
+const ModdChunk_s& WmoModel::getModdChunk() const {
+  return _moddChunk;
+}
+
+//------------------------------------------------------------------------------
+const ModnChunk_s& WmoModel::getModnChunk() const {
+  return _modnChunk;
+}

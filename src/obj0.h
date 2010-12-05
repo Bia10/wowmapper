@@ -135,11 +135,14 @@ struct Wmo_s {
 
 
 //------------------------------------------------------------------------------
+/** Obj0 contains all object references to WMOs and doodads. **/
 class Obj0 {
  public:
   Obj0( const BufferS_t &obj_buf );
 
+  /** Get doodad by index. **/
   void getDoodad( uint32_t index, Doodad_s *doodad ) const;
+  /** Get WMO by index. **/
   void getWmo( uint32_t index, Wmo_s *wmo ) const;
   const ObjectReferences_t& getObjectRefs() const;
   const WmoInformations_t& wmoInfo() const;

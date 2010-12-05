@@ -220,7 +220,7 @@ struct ModdChunk_s {
   struct DoodadInformation_s {
     uint32_t id;
     glm::vec3 position;
-    glm::vec4 rotation;
+    glm::quat rotation;
     float scale;
     uint32_t color;
   };
@@ -238,6 +238,7 @@ struct ModdChunk_s {
 typedef std::vector<WmoGroup*> WmoGroups_t;
 
 //------------------------------------------------------------------------------
+/** WmoModel is the parent structure for WmoGroups. **/
 class WmoModel {
  public:
   WmoModel( const BufferS_t &wmo_buf );
@@ -246,6 +247,8 @@ class WmoModel {
   void getIndices( Indices32_t *indices, uint32_t filter = 0xff, uint32_t off = 0 ) const;
   void getVertices( Vertices_t *vertices ) const;
   void getNormals( Normals_t *normals ) const;
+  const ModdChunk_s& getModdChunk() const;
+  const ModnChunk_s& getModnChunk() const;
 
  private:
   MverChunk_s _mverChunk;

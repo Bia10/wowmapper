@@ -140,6 +140,7 @@
 				AdditionalDependencies="SDL.lib SDLMain.lib d3d9.lib d3dx9.lib zlib.lib bzip2.lib libmpq.lib wowmapper.lib"
 				LinkIncremental="1"
 				AdditionalLibraryDirectories="..\Release"
+				IgnoreDefaultLibraryNames=""
 				GenerateDebugInformation="true"
 				SubSystem="1"
 				OptimizeReferences="2"
