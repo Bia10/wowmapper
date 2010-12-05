@@ -9,17 +9,13 @@ Renderer::Renderer( uint32_t width, uint32_t height, const std::string &title )
       _d3dDev9( NULL ),
       _camera( glm::vec3( 0, 100, 0 ), glm::vec3( 0, 0, 0 ) ),
       _lastMouseX( 0 ),
-      _lastMouseY( 0 ) {
+      _lastMouseY( 0 ),
+      _lightCounter( 0 ) {
 }
 
 //------------------------------------------------------------------------------
 bool Renderer::initialize() {
-  if ( initSDL() && initDirect3D() ) {
-    initScene();
-    return true;
-  }
-
-  return false;
+  return initSDL() && initDirect3D();
 }
 
 //------------------------------------------------------------------------------
@@ -114,26 +110,38 @@ bool Renderer::initDirect3D() {
   material.Diffuse.a = material.Ambient.a = 1.0f;
   _d3dDev9->SetMaterial( &material );
 
-  // create the directional light
-  D3DLIGHT9 light;
-  ZeroMemory( &light, sizeof( D3DLIGHT9 ) );
-  light.Type = D3DLIGHT_DIRECTIONAL;
-  light.Direction.x = -1;
-  light.Direction.y = -2;
-  light.Direction.z = 1;
-  light.Diffuse.r = 1.0f;
-  light.Diffuse.g = 1.0f;
-  light.Diffuse.b = 1.0f;
-  _d3dDev9->SetLight( 0, &light );
-  _d3dDev9->LightEnable( 0, TRUE );
+  // create directional lights
+  createDirectionalLight( glm::vec3( -1, -2, 1 ), glm::vec3( 0.5f, 0.5f, 0.6f ) ); 
+  createDirectionalLight( glm::vec3( 1, 2, 1 ), glm::vec3( 0.3f, 0.3f, 0.4f ) );
 
   // set render states
   _d3dDev9->SetRenderState( D3DRS_CULLMODE, D3DCULL_NONE );
   _d3dDev9->SetRenderState( D3DRS_LIGHTING, TRUE );
   _d3dDev9->SetRenderState( D3DRS_ZENABLE, D3DZB_TRUE );
+  _d3dDev9->SetRenderState( D3DRS_AMBIENT, D3DCOLOR_XRGB( 32, 32, 32 ) );
 
   return true;
 }
+
+//------------------------------------------------------------------------------
+void Renderer::createDirectionalLight( const glm::vec3 &dir, const glm::vec3 &diff ) {
+  D3DLIGHT9 light;
+  ZeroMemory( &light, sizeof( D3DLIGHT9 ) );
+  
+  light.Type = D3DLIGHT_DIRECTIONAL;
+  light.Direction.x = dir.x;
+  light.Direction.y = dir.y;
+  light.Direction.z = dir.z;
+  light.Diffuse.r = diff.r;
+  light.Diffuse.g = diff.g;
+  light.Diffuse.b = diff.b;
+
+  _d3dDev9->SetLight( _lightCounter, &light );
+  _d3dDev9->LightEnable( _lightCounter, TRUE );
+
+  _lightCounter++;
+}
+
 
 //------------------------------------------------------------------------------
 void Renderer::sdlPollEvents() {

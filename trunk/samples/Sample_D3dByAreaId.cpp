@@ -9,15 +9,24 @@
 #include "renderer.h"
 
 //- Functions ------------------------------------------------------------------
+/** Just a list of MPQs we want to load. **/
 void loadAllMpqs( MpqHandler &mpq_h );
+/** Load MPQ by filename. **/
 void loadMpq( MpqHandler &mpq_h, const std::string &filename );
+/** Load *.adt and *.obj0 files from MPQ. **/
 bool loadAdt( MpqHandler &mpq_h, const std::string &name,
               BufferS_t *adt_buf, BufferS_t *obj_buf );
+/** Load WMOs and doodads here. **/
 void loadObjectReferences( MpqHandler &mpq_h, Obj0 &obj0, Indices32_t *indices,
                            Vertices_t *vertices, Normals_t *normals );
+/** Filter terrain by area ID and add them to our coordinate vector. **/
 void getCoordsByAreaId( MpqHandler &mpq_h, const AdtCoords_t &original_coords,
                         const std::string &zone_path, uint32_t area_id,
                         AdtCoords_t *coords );
+/** Used to retrieve doodad geometry. **/
+bool getDoodadGeometry( MpqHandler &mpq_h, const std::string &doodad_name,
+                        Indices32_t *doodad_indices, Vertices_t *doodad_vertices,
+                        Normals_t *doodad_normals );
 
 //- WoW related ----------------------------------------------------------------
 UidMap_t uid_map;
@@ -34,16 +43,16 @@ int main( int arch, char **argv ) {
   mpq_h.getFile( zone_path + ".wdt", &file_buffer );
 
   // create geometry buffer
-  Vertices_t vertices; vertices.reserve( 1000000 );
-  Indices32_t indices; indices.reserve( 1000000 );
-  Normals_t normals; normals.reserve( 1000000 );
+  Vertices_t vertices;
+  Indices32_t indices;
+  Normals_t normals;
 
   // parse WDT files
   Wdt wdt( file_buffer );
 
-  // GET COORDS BY AREA ID! AREA ID -> 12
+  // GET COORDS BY AREA ID! AREA ID -> 12 (Elwynn Forrest), 14 (Durotar)
   AdtCoords_t coords;
-  getCoordsByAreaId( mpq_h, wdt.getAdtCoords(), zone_path, 440, &coords );
+  getCoordsByAreaId( mpq_h, wdt.getAdtCoords(), zone_path, 14, &coords );
   
   if ( coords.size() <= 0 ) {
     std::cout << "Zone not found." << std::endl;
@@ -151,6 +160,7 @@ int main( int arch, char **argv ) {
 
 //------------------------------------------------------------------------------
 void loadAllMpqs( MpqHandler &mpq_h ) {
+
   loadMpq( mpq_h, "wow-update-13329.MPQ" );
   loadMpq( mpq_h, "wow-update-13287.MPQ" );
   loadMpq( mpq_h, "wow-update-13205.MPQ" );
@@ -203,22 +213,18 @@ void loadObjectReferences( MpqHandler &mpq_h, Obj0 &obj0, Indices32_t *indices,
 
         BufferS_t doodad_buf;
         mpq_h.getFile( doodad.name, &doodad_buf );
-        //std::cout << doodad.name << std::endl;
 
-        // load doodad if buffer has data
-        if ( doodad_buf.size() ) {
-          M2 m2( doodad_buf );
+        // doodad buffers
+        Indices32_t m2_i;
+        Vertices_t m2_v;
+        Normals_t m2_n;
 
-          Indices32_t m2_i;
-          Vertices_t m2_v;
-          Normals_t m2_n;
-
-          m2.getBoundingIndices( &m2_i );
-          m2.getBoundingVertices( &m2_v );
-          m2.getBoundingNormals( &m2_n );
+        // if doodad geometry is present: transform and merge
+        if ( getDoodadGeometry( mpq_h, doodad.name, &m2_i, &m2_v, &m2_n ) ) {
           // bring vertices to our coordinate system
           transformVertices( doodad.info.pos, doodad.info.rot,
                              doodad.info.scale / 1024, &m2_v ); 
+
 
           mergeIndices( m2_i, vertices->size(), indices );
           mergeVertices( m2_v, vertices );
@@ -244,10 +250,11 @@ void loadObjectReferences( MpqHandler &mpq_h, Obj0 &obj0, Indices32_t *indices,
         BufferS_t wmo_buf;
         mpq_h.getFile( wmo.name, &wmo_buf );
 
+        // parse wmo data
         WmoModel wmo_model( wmo_buf );
         wmo_model.loadGroups( wmo.name, mpq_h );
-        //std::cout << wmo.name << std::endl;
 
+        // wmo buffers
         Indices32_t wmo_i;
         Vertices_t wmo_v;
         Normals_t wmo_n;
@@ -263,6 +270,46 @@ void loadObjectReferences( MpqHandler &mpq_h, Obj0 &obj0, Indices32_t *indices,
         mergeIndices( wmo_i, vertices->size(), indices );
         mergeVertices( wmo_v, vertices );
         mergeNormals( wmo_n, normals );
+
+        // get interior doodads for WMOs
+        const ModnChunk_s &modn_chunk = wmo_model.getModnChunk();
+        const ModdChunk_s::DoodadInformations_t &modd_infos = wmo_model.getModdChunk().infos;        
+        for ( ModdChunk_s::DoodadInformations_t::const_iterator iter = modd_infos.begin();
+              iter != modd_infos.end();
+              ++iter ) {
+          // doodad name
+          std::string doodad_name( (const char*)&modn_chunk.doodadNames[iter->id] );
+          doodad_name.replace( doodad_name.size() - 4, 4, ".M2" );
+          BufferS_t doodad_buf;
+          mpq_h.getFile( doodad_name, &doodad_buf );
+
+          // load doodad if buffer has data
+          if ( doodad_buf.size() ) {
+            M2 m2( doodad_buf );
+
+            Indices32_t m2_i;
+            Vertices_t m2_v;
+            Normals_t m2_n;
+
+            m2.getBoundingIndices( &m2_i );
+            m2.getBoundingVertices( &m2_v );
+            m2.getBoundingNormals( &m2_n );
+
+            // interior doodads have to be transformed by their parent WMO's
+            // transformation first
+            for ( int i = 0; i < m2_v.size(); i++ ) {
+              glm::vec3 &vtx = m2_v[i];
+              vtx = glm::rotate( iter->rotation, vtx ) * iter->scale + iter->position;
+            }
+
+            // now transform by 
+            transformVertices( info.pos, info.rot, 1.0f, &m2_v );
+
+            mergeIndices( m2_i, vertices->size(), indices );
+            mergeVertices( m2_v, vertices );
+            mergeNormals( m2_n, normals );
+          }
+        }
       }
     }
   }
@@ -277,7 +324,7 @@ void getCoordsByAreaId( MpqHandler &mpq_h, const AdtCoords_t &original_coords,
         iter != original_coords.end();
         ++iter ) {
     count++;
-    if ( count < 779 || count > 918 ) continue;
+    //if ( count < 256 || count > 512 ) continue;
 
     // create file string
     std::stringstream adt_ss;
@@ -294,7 +341,6 @@ void getCoordsByAreaId( MpqHandler &mpq_h, const AdtCoords_t &original_coords,
     for ( AdtTerrain_t::const_iterator terr = adt_terr.begin();
           terr != adt_terr.end();
           ++terr ) {
-      //std::cout << "ID: " << terr->areaId << std::endl;
       if ( terr->areaId == area_id ) {
         std::cout << " found area";
         coords->push_back( *iter );
@@ -303,4 +349,34 @@ void getCoordsByAreaId( MpqHandler &mpq_h, const AdtCoords_t &original_coords,
     }
     std::cout << std::endl;
   }
+}
+
+//------------------------------------------------------------------------------
+bool getDoodadGeometry( MpqHandler &mpq_h, const std::string &doodad_name,
+                        Indices32_t *doodad_indices, Vertices_t *doodad_vertices,
+                        Normals_t *doodad_normals ) {
+  BufferS_t doodad_buf;
+  mpq_h.getFile( doodad_name, &doodad_buf );
+
+  // load doodad if buffer has data
+  if ( doodad_buf.size() ) {
+    M2 m2( doodad_buf );
+
+    // only get data if parameter is passed
+    if ( doodad_indices ) {
+      m2.getBoundingIndices( doodad_indices );
+    }
+
+    if ( doodad_vertices ) {
+      m2.getBoundingVertices( doodad_vertices );
+    }
+
+    if ( doodad_normals ) {
+      m2.getBoundingNormals( doodad_normals );
+    }
+
+    return true;
+  }
+
+  return false;
 }

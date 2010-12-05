@@ -75,8 +75,11 @@ bool Adt::parseMh2oChunk( std::istream &i_str ) {
   uint32_t data_offset = pos + CHUNK_DATA;
   size_t chunk_size = readChunkHead( i_str, "MH2O", (char*)&_mh2oChunk );
 
+  i_str.seekg( data_offset + chunk_size );
+  return true;
+
   // read MH2O headers
-  Mh2oChunk_s::Headers_t &headers = _mh2oChunk.headers;
+  /*Mh2oChunk_s::Headers_t &headers = _mh2oChunk.headers;
   headers.resize( 256 );
   for ( int i = 0; i < 256; i++ ) {
     i_str.read( (char*)&headers[i], sizeof( Mh2oChunk_s::Header_s ) );
@@ -91,9 +94,11 @@ bool Adt::parseMh2oChunk( std::istream &i_str ) {
     uint32_t num_layers = (uint32_t)header.numLayers;
     
     // set position to read the render map
-    header.renderMap = new uint64_t;
-    i_str.seekg( data_offset + render_offset );
-    i_str.read( (char*)header.renderMap, sizeof( uint64_t ) );
+    if ( header.renderMap != NULL ) {
+      header.renderMap = new uint64_t;
+      i_str.seekg( data_offset + render_offset );
+      i_str.read( (char*)header.renderMap, sizeof( uint64_t ) );
+    }
     
     // create layers
     if ( info_offset && num_layers ) {
@@ -133,24 +138,26 @@ bool Adt::parseMh2oChunk( std::istream &i_str ) {
     }
   }
 
+  uint32_t off = data_offset + _mh2oChunk.size;
   // set seek position to end of MH2O chunk
-  i_str.seekg( data_offset + _mh2oChunk.size );
+  i_str.seekg( off, std::ios::beg );  
 
-  return true;
+  return true;*/
 }
 
 //------------------------------------------------------------------------------
 void Adt::parseMcnkChunk( std::istream &i_str, McnkChunk_s *mcnk_chunk,
                           Terrain_s *terrain ) {
   uint32_t mcnk_off = i_str.tellg();
-
+  
+  uint32_t chunk_size = 0;
   // read MCNK chunk
-  i_str.read( (char*)mcnk_chunk, sizeof( McnkChunk_s ) );
+  chunk_size = readChunkHead( i_str, "MCNK", (char*)mcnk_chunk, sizeof( McnkChunk_s ) );
  
   // set stream position to MCVT chunk
   McvtChunk_s mcvt_chunk;
   i_str.seekg( mcnk_off + mcnk_chunk->mcvtOff, std::ios::beg );
-  i_str.read( (char*)&mcvt_chunk, sizeof( McvtChunk_s ) );
+  chunk_size = readChunkHead( i_str, "MCVT", (char*)&mcvt_chunk, sizeof( McvtChunk_s ) );
 
   // read all height values
   int num_heights = mcvt_chunk.size / sizeof( float );
@@ -164,7 +171,7 @@ void Adt::parseMcnkChunk( std::istream &i_str, McnkChunk_s *mcnk_chunk,
   // set stream position to MCNR chunk
   McnrChunk_s mcnr_chunk;
   i_str.seekg( mcnk_off + mcnk_chunk->mcnrOff, std::ios::beg );
-  i_str.read( (char*)&mcnr_chunk, sizeof( McnrChunk_s ) );
+  chunk_size = readChunkHead( i_str, "MCNR", (char*)&mcnr_chunk, sizeof( McnrChunk_s ) );
 
   // read all normal values
   //int num_normals = mcnr_chunk.size / sizeof( char ); // size is wrong

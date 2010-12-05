@@ -9,15 +9,12 @@ Camera::Camera( const glm::vec3 &pos, const glm::vec3 &look_at )
 
 //------------------------------------------------------------------------------
 void Camera::rotate( float yaw, float pitch ) {
-  // create matrix and rotate around y-axis
-  glm::mat4 matrix;
-  matrix = glm::rotate( matrix, pitch, glm::vec3( 1, 0, 0 ) );
-  matrix = glm::rotate( matrix, yaw, glm::vec3( 0, 1, 0 ) );
-  glm::vec4 v4( _direction, 0 );
-  // apply matrix
-  v4 = matrix * v4;
-  _direction = glm::vec3( v4 );
-  // update look at
+  // create rotation
+  glm::quat q_rotate;
+  q_rotate = glm::gtc::quaternion::rotate( q_rotate, yaw, glm::vec3( 0, 1, 0 ) );
+  q_rotate = glm::gtc::quaternion::rotate( q_rotate, -pitch, glm::vec3( 1, 0, 0 ) );
+
+  _direction = q_rotate * _direction;
   _lookAt = _position + _direction;
 }
 

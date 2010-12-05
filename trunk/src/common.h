@@ -121,7 +121,7 @@ static void quitApp( const std::string &msg ) {
 static void checkChunkId( const char *chunk_id, const char *check_id ) {
   for ( int i = 0; i < 4; i++ ) {
     if ( chunk_id[3-i] != check_id[i] ) {
-      quitApp( "wrong chunk id encountered" );
+      quitApp( "chunk id mismatch: " + std::string( check_id ) );
     }
   }
 }

@@ -53,6 +53,7 @@ struct M2Data_s {
   glm::vec2 unknown;
 };
 
+/** Parses doodad data and provides their bounding geometry. **/
 class M2 {
  public:
   M2( const BufferS_t &m2_buf );
