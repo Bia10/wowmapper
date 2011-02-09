@@ -18,6 +18,6 @@
 
 struct MverChunk_s {
   char id[4];
-  size_t size;
+  uint32_t size;
   char version[4];
 };
