@@ -70,14 +70,16 @@ void Obj0::parseObjectReferences( std::istream &i_str ) {
     i_str.read( (char*)&mcnk_chunk, sizeof( ObjMcnkChunk_s ) );
     size_t data_off = i_str.tellg();
 
-    // I believe there is no MCRW without MCRD chunks, but MCRD is always first
     if ( mcnk_chunk.size ) {
-      McrdChunk_s &mcrd_chunk = _objectRefs[i].mcrdChunk;
-      i_str.read( (char*)&mcrd_chunk, sizeof( McrdChunk_s ) );
-      
-      // read doodad indices
-      _objectRefs[i].doodadIndices.resize( mcrd_chunk.size / 4 );
-      i_str.read( (char*)&_objectRefs[i].doodadIndices[0], mcrd_chunk.size );
+
+      if (i_str.peek()=='D') { //Check if next is MCRD or MCRW //NONO
+        McrdChunk_s &mcrd_chunk = _objectRefs[i].mcrdChunk;
+        i_str.read( (char*)&mcrd_chunk, sizeof( McrdChunk_s ) );
+
+        // read doodad indices
+        _objectRefs[i].doodadIndices.resize( mcrd_chunk.size / 4 );
+        i_str.read( (char*)&_objectRefs[i].doodadIndices[0], mcrd_chunk.size );
+      }
 
       // check if there's a MCRW chunk left to read
       if ( (data_off + mcnk_chunk.size) > i_str.tellg() ) {
