@@ -16,8 +16,10 @@ M2::M2( const BufferS_t &m2_buf ) {
 
   if ( _m2Header.numVertices ) {
     _vertices.resize( _m2Header.numVertices );
-    i_str.seekg( _m2Header.verticesOff );
-    i_str.read( (char*)&_vertices[0], _vertices.size() * sizeof( glm::vec3 ) );
+    for(int i=0; i<_m2Header.numVertices; i++) {
+        i_str.seekg( _m2Header.verticesOff+48*i );
+        i_str.read( (char*)&_vertices[i], sizeof( glm::vec3 ) );
+    }
   }
 
   // get bounding triangles
