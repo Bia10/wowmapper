@@ -217,13 +217,13 @@ void loadObjectReferences( MpqHandler &mpq_h, Obj0 &obj0, Indices32_t *indices,
         // doodad buffers
         Indices32_t m2_i;
         Vertices_t m2_v;
-        Normals_t m2_n;
+        Normals_t m2_n
 
         // if doodad geometry is present: transform and merge
         if ( getDoodadGeometry( mpq_h, doodad.name, &m2_i, &m2_v, &m2_n ) ) {
           // bring vertices to our coordinate system
           transformVertices( doodad.info.pos, doodad.info.rot,
-                             doodad.info.scale / 1024, &m2_v ); 
+                             doodad.info.scale / 1024.0f, &m2_v ); 
 
 
           mergeIndices( m2_i, vertices->size(), indices );
